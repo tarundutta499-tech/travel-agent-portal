@@ -942,8 +942,8 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 border-t border-cream/5 flex flex-col md:flex-row justify-between items-center gap-4 text-sand/40">
           <p>© 2026 Wandertribe Adventure Platforms. All rights reserved. | GSTIN: [REAL_GSTIN]</p>
           <div className="flex gap-4 font-semibold">
-            <Link href="/privacy" className="hover:text-cream transition-colors">Privacy Policy</Link>
-            <Link href="/terms" className="hover:text-cream transition-colors">Terms of Service</Link>
+            <Link href="/privacy-policy" className="hover:text-cream transition-colors">Privacy Policy</Link>
+            <Link href="/terms-of-service" className="hover:text-cream transition-colors">Terms of Service</Link>
             <Link href="/refund-policy" className="hover:text-cream transition-colors">Cancellation &amp; Refunds</Link>
           </div>
         </div>
