@@ -94,10 +94,10 @@ export default function PrivacyPolicyPage() {
               3. Third-Party Sharing
             </h2>
             <p>
-              We do not sell, lease, or distribute your personal data. We share only necessary information with select third parties to facilitate your booking:
+              We do not sell, lease, or distribute your personal data. We share only necessary information with sub-contracted partners to execute the managed travel experiences:
             </p>
             <ul className="list-disc pl-5 space-y-1">
-              <li><strong>Travel Vendors &amp; DMCs:</strong> Local guesthouse hosts, houseboat owners, transport drivers, and certified alpine guides who execute your trip.</li>
+              <li><strong>Local Operators &amp; Sub-contractors:</strong> Local guesthouse hosts, houseboat owners, transport drivers, and certified alpine guides who execute specific parts of the itinerary under our management.</li>
               <li><strong>Service Providers:</strong> Payment gateway operators and email/CRM marketing utilities.</li>
               <li><strong>Legal Compliance:</strong> When required by Indian law enforcement or court order.</li>
             </ul>

@@ -65,10 +65,10 @@ export default function TermsOfServicePage() {
               1. Service Description
             </h2>
             <p>
-              Wandertribe operates a digital reservation platform facilitating adventure travel package bookings in Kashmir and connecting users with local third-party providers, including destination management companies (DMCs), certified alpine guides, guesthouses, houseboat owners, and transport operators.
+              Wandertribe is a full-service travel management provider. We design, manage, and coordinate the entire travel itinerary, local logistics, transport schedules, guide assignments, and safety protocols for our clients. We act as the single point of management and accountability for your entire trip, overseeing local operators, guides, transport teams, and accommodations to ensure a seamless, managed experience.
             </p>
             <p className="font-semibold text-obsidian">
-              Please note that Wandertribe does not own, run, or directly operate any hotels, homestays, transport fleets, or helicopter services. All such travel accommodations and logistics are provided directly by independent third-party vendors.
+              While we coordinate with verified local partners and accommodations, Wandertribe is the primary manager responsible for orchestrating, quality-controlling, and executing the adventure travel package you book.
             </p>
           </section>
 
@@ -127,15 +127,15 @@ export default function TermsOfServicePage() {
             </div>
 
             <p>
-              Wandertribe acts solely as an booking agent and facilitator. We assume no responsibility or liability for:
+              As your full-service travel manager, Wandertribe takes responsibility for orchestrating, quality-controlling, and executing the booking. We actively manage and resolve any local operational challenges or scheduling delays during your trip. However, Wandertribe shall not be held liable for:
             </p>
             <ul className="list-disc pl-5 space-y-1">
-              <li>Service failures, negligence, or safety breaches committed by third-party hotels, guides, or transport fleets.</li>
-              <li>Delays or schedule modifications caused by flight cancellations, road blockages (such as closures on the Jammu-Srinagar highway NH-44), or heavy snowfall.</li>
-              <li>Force Majeure events, natural disasters, avalanches, civil disturbances, or government-imposed restrictions in the Kashmir Valley.</li>
+              <li>Delays, blockages, or travel modifications due to road closures (such as landslides on the NH-44 highway) or flight cancellations.</li>
+              <li>Force Majeure events, natural disasters, avalanches, civil disturbances, or government-imposed security restrictions in the Kashmir Valley.</li>
+              <li>Personal injuries, illnesses, or high-altitude health risks voluntarily undertaken by the client during ski or trek packages.</li>
             </ul>
             <p>
-              In no event shall Wandertribe&apos;s total liability exceed the actual booking fees paid by the client for that specific travel package.
+              In no event shall Wandertribe&apos;s total financial liability exceed the actual fees paid by the client for the specific travel package.
             </p>
           </section>
 
