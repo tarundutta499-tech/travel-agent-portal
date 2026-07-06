@@ -295,6 +295,28 @@ export default function PackagesListingPage() {
                         <p className="text-xs text-obsidian/60 flex items-center gap-1">
                           <MapPin className="w-3 h-3 text-primary" /> {pkg.destination}, Kashmir
                         </p>
+                        {(() => {
+                          const stay = pkg.included?.find(item => 
+                            item.toLowerCase().includes('inn') || 
+                            item.toLowerCase().includes('lodging') || 
+                            item.toLowerCase().includes('stay') || 
+                            item.toLowerCase().includes('camp') || 
+                            item.toLowerCase().includes('resort') || 
+                            item.toLowerCase().includes('hotel') || 
+                            item.toLowerCase().includes('cottage')
+                          );
+                          if (!stay) return null;
+                          const cleanStay = stay
+                            .replace('Riverside cottage rooms at ', '')
+                            .replace('Luxury ', '')
+                            .replace('A-grade ', '')
+                            .replace('Premium ', '');
+                          return (
+                            <div className="inline-flex items-center gap-1 text-[9px] font-extrabold uppercase tracking-wider text-secondary bg-secondary/5 border border-secondary/15 px-2 py-0.5 rounded-lg w-fit mt-1">
+                              <span>🏨 {cleanStay}</span>
+                            </div>
+                          );
+                        })()}
                       </div>
 
                       <div className="pt-3 border-t border-obsidian/5 flex items-center justify-between">
