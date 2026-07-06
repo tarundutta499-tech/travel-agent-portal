@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
@@ -30,6 +30,18 @@ export default function PackagesListingPage() {
   const [mapView, setMapView] = useState<boolean>(false);
   const [savedPackages, setSavedPackages] = useState<string[]>([]);
   const [showMobileFilters, setShowMobileFilters] = useState<boolean>(false);
+  const [packages, setPackages] = useState(mockPackages);
+
+  useEffect(() => {
+    fetch('/api/packages')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.packages) {
+          setPackages(data.packages);
+        }
+      })
+      .catch(err => console.error('Error loading database packages:', err));
+  }, []);
 
   const toggleSavePackage = (id: string) => {
     setSavedPackages(prev => 
@@ -38,7 +50,7 @@ export default function PackagesListingPage() {
   };
 
   // Filter Logic
-  const filteredPackages = mockPackages.filter(pkg => {
+  const filteredPackages = packages.filter(pkg => {
     const matchSearch = pkg.title.toLowerCase().includes(search.toLowerCase()) || 
                         pkg.destination.toLowerCase().includes(search.toLowerCase());
     const matchCategory = selectedCategory === 'all' || pkg.category === selectedCategory;

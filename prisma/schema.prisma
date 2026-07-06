@@ -1,0 +1,86 @@
+datasource db {
+  provider = "postgresql"
+}
+
+generator client {
+  provider   = "prisma-client-js"
+  engineType = "binary"
+}
+
+model Guide {
+  id         String    @id @default(uuid())
+  name       String
+  avatar     String
+  rating     Float
+  experience String
+  bio        String
+  packages   Package[]
+}
+
+model Package {
+  id           String         @id @default(uuid())
+  title        String
+  slug         String         @unique
+  description  String
+  destination  String
+  price        Float
+  duration     String
+  difficulty   String
+  groupSizeMax Int
+  image        String
+  images       String[]
+  category     String
+  rating       Float          @default(5.0)
+  reviewsCount Int            @default(0)
+  active       Boolean        @default(true)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  itinerary    ItineraryDay[]
+  included     String[]
+  excluded     String[]
+  guideId      String?
+  guide        Guide?         @relation(fields: [guideId], references: [id])
+}
+
+model ItineraryDay {
+  id          String   @id @default(uuid())
+  packageId   String
+  package     Package  @relation(fields: [packageId], references: [id], onDelete: Cascade)
+  day         Int
+  title       String
+  description String
+  activities  String[]
+}
+
+model Destination {
+  id    String @id @default(uuid())
+  name  String
+  slug  String @unique
+  image String
+  desc  String
+  count Int    @default(0)
+}
+
+model Lead {
+  id          String   @id @default(uuid())
+  name        String
+  email       String
+  phone       String
+  destination String?
+  date        String?
+  guests      String?
+  notes       String?
+  formType    String   @default("itinerary") // "itinerary" or "general"
+  submittedAt DateTime @default(now())
+}
+
+model PartnerApplication {
+  id              String   @id @default(uuid())
+  name            String
+  email           String
+  phone           String
+  companyName     String?
+  partnershipType String
+  message         String?
+  submittedAt     DateTime @default(now())
+}

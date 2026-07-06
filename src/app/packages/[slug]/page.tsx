@@ -1,6 +1,6 @@
 'use client';
 
-import { use, useState } from 'react';
+import { use, useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
@@ -24,14 +24,28 @@ export default function PackageDetailPage({ params }: { params: Promise<{ slug: 
   const { slug } = use(params);
   
   // Find package by slug
-  const pkg = mockPackages.find(p => p.slug === slug) || mockPackages[0];
-  
+  const [pkg, setPkg] = useState(() => mockPackages.find(p => p.slug === slug) || mockPackages[0]);
   const [activeImage, setActiveImage] = useState<string>(pkg.image);
   const [activeDay, setActiveDay] = useState<number | null>(1);
   const [guestCount, setGuestCount] = useState<number>(2);
   const [date, setDate] = useState<string>('2026-10-15');
   const [bookingInquirySubmitted, setBookingInquirySubmitted] = useState<boolean>(false);
   const [saved, setSaved] = useState<boolean>(false);
+
+  useEffect(() => {
+    fetch('/api/packages')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.packages) {
+          const found = data.packages.find((p: any) => p.slug === slug);
+          if (found) {
+            setPkg(found);
+            setActiveImage(found.image);
+          }
+        }
+      })
+      .catch(err => console.error('Error loading database package detail:', err));
+  }, [slug]);
 
   const totalPrice = pkg.price * guestCount;
 

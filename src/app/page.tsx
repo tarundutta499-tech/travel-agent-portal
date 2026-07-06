@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
@@ -24,27 +24,27 @@ const formatCurrency = (val: number) => {
 const testimonials = [
   {
     id: 1,
-    name: 'Sarah Jenkins',
-    location: 'United Kingdom',
-    quote: 'The Gulmarg ski runs were incredible. Our guide Riyaz checked avalanche reports hourly and kept us extremely safe while finding deep backcountry powder!',
+    name: '[REAL_TESTIMONIAL_1_NAME]',
+    location: '[REAL_TESTIMONIAL_1_LOCATION]',
+    quote: '[REAL_TESTIMONIAL_1_QUOTE - e.g. "The Gulmarg ski runs were incredible. Our guide checked avalanche reports hourly..."]',
     rating: 5,
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=sarah'
+    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=placeholder1'
   },
   {
     id: 2,
-    name: 'Marco Rossi',
-    location: 'Italy',
-    quote: 'Staying in the cedar houseboat on Dal Lake was magical. Waking up to the sunrise floating market and taking a Shikara to historical gardens is a dream.',
+    name: '[REAL_TESTIMONIAL_2_NAME]',
+    location: '[REAL_TESTIMONIAL_2_LOCATION]',
+    quote: '[REAL_TESTIMONIAL_2_QUOTE - e.g. "Staying in the cedar houseboat on Dal Lake was magical. Waking up to the sunrise floating market..."]',
     rating: 5,
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=marco'
+    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=placeholder2'
   },
   {
     id: 3,
-    name: 'Tanya Mehta',
-    location: 'India',
-    quote: 'The Gurez border caravan was beautiful. Hiking near Habba Khatoon Peak and visiting remote wooden Dardic villages was a once-in-a-lifetime experience.',
+    name: '[REAL_TESTIMONIAL_3_NAME]',
+    location: '[REAL_TESTIMONIAL_3_LOCATION]',
+    quote: '[REAL_TESTIMONIAL_3_QUOTE - e.g. "The Gurez border caravan was beautiful. Hiking near Habba Khatoon Peak..."]',
     rating: 5,
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=tanya'
+    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=placeholder3'
   }
 ];
 
@@ -58,6 +58,18 @@ const categories = [
 ];
 
 export default function HomePage() {
+  const [packages, setPackages] = useState(mockPackages);
+
+  useEffect(() => {
+    fetch('/api/packages')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.packages) {
+          setPackages(data.packages);
+        }
+      })
+      .catch(err => console.error('Error fetching dynamic packages:', err));
+  }, []);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeTestimonial, setActiveTestimonial] = useState(0);
   const [savedPackages, setSavedPackages] = useState<string[]>([]);
@@ -77,6 +89,104 @@ export default function HomePage() {
 
   const prevTestimonial = () => {
     setActiveTestimonial(prev => (prev - 1 + testimonials.length) % testimonials.length);
+  };
+
+  // Itinerary Form State
+  const [itineraryForm, setItineraryForm] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    destination: '',
+    date: '',
+    guests: '2',
+    notes: '',
+    website_confirm: '' // Honeypot
+  });
+  const [itineraryLoading, setItineraryLoading] = useState(false);
+  const [itinerarySuccess, setItinerarySuccess] = useState<string | null>(null);
+  const [itineraryError, setItineraryError] = useState<string | null>(null);
+
+  // Partner Form State
+  const [partnerForm, setPartnerForm] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    companyName: '',
+    partnershipType: 'Certified Guide',
+    message: '',
+    website_confirm: '' // Honeypot
+  });
+  const [partnerLoading, setPartnerLoading] = useState(false);
+  const [partnerSuccess, setPartnerSuccess] = useState<string | null>(null);
+  const [partnerError, setPartnerError] = useState<string | null>(null);
+
+  const handleItinerarySubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setItineraryLoading(true);
+    setItineraryError(null);
+    setItinerarySuccess(null);
+
+    try {
+      const res = await fetch('/api/leads', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(itineraryForm),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setItinerarySuccess(data.message);
+        setItineraryForm({
+          name: '',
+          email: '',
+          phone: '',
+          destination: '',
+          date: '',
+          guests: '2',
+          notes: '',
+          website_confirm: ''
+        });
+      } else {
+        setItineraryError(data.error || 'Something went wrong. Please try again.');
+      }
+    } catch (err) {
+      setItineraryError('Network error. Please check your connection and try again.');
+    } finally {
+      setItineraryLoading(false);
+    }
+  };
+
+  const handlePartnerSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPartnerLoading(true);
+    setPartnerError(null);
+    setPartnerSuccess(null);
+
+    try {
+      const res = await fetch('/api/partners', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(partnerForm),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setPartnerSuccess(data.message);
+        setPartnerForm({
+          name: '',
+          email: '',
+          phone: '',
+          companyName: '',
+          partnershipType: 'Certified Guide',
+          message: '',
+          website_confirm: ''
+        });
+      } else {
+        setPartnerError(data.error || 'Something went wrong. Please try again.');
+      }
+    } catch (err) {
+      setPartnerError('Network error. Please check your connection and try again.');
+    } finally {
+      setPartnerLoading(false);
+    }
   };
 
   return (
@@ -257,7 +367,7 @@ export default function HomePage() {
           {/* Trust stats */}
           <div className="grid grid-cols-3 gap-6 md:gap-16 w-full md:w-auto">
             <div className="text-center md:text-left">
-              <span className="text-2xl md:text-3xl font-extrabold font-display text-primary">12k+</span>
+              <span className="text-2xl md:text-3xl font-extrabold font-display text-primary">[REAL_TRAVELERS_COUNT]</span>
               <span className="block text-[10px] uppercase font-bold tracking-wider text-obsidian/50">Happy Explorers</span>
             </div>
             <div className="text-center md:text-left">
@@ -265,17 +375,14 @@ export default function HomePage() {
               <span className="block text-[10px] uppercase font-bold tracking-wider text-obsidian/50">Kashmir Covered</span>
             </div>
             <div className="text-center md:text-left">
-              <span className="text-2xl md:text-3xl font-extrabold font-display text-forest">4.94</span>
+              <span className="text-2xl md:text-3xl font-extrabold font-display text-forest">[REAL_AVERAGE_RATING]</span>
               <span className="block text-[10px] uppercase font-bold tracking-wider text-obsidian/50">Average Rating</span>
             </div>
           </div>
 
           {/* As featured in */}
           <div className="flex items-center gap-6 flex-wrap justify-center opacity-40 grayscale">
-            <span className="text-xs font-bold uppercase tracking-widest font-display">NAT GEO</span>
-            <span className="text-xs font-bold uppercase tracking-widest font-display">LONELY PLANET</span>
-            <span className="text-xs font-bold uppercase tracking-widest font-display">TRIPADVISOR</span>
-            <span className="text-xs font-bold uppercase tracking-widest font-display">OUTSIDE MAG</span>
+            <span className="text-xs font-bold uppercase tracking-widest font-display">[REAL_MEDIA_PARTNERS]</span>
           </div>
         </div>
       </section>
@@ -295,7 +402,7 @@ export default function HomePage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {mockPackages.slice(0, 4).map(pkg => (
+          {packages.slice(0, 4).map(pkg => (
             <Card key={pkg.id} hoverEffect="lift" className="flex flex-col bg-cream group">
               <div className="relative aspect-[4/3] bg-obsidian/5 overflow-hidden">
                 <img 
@@ -346,6 +453,133 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* ─── PLAN YOUR ITINERARY SECTION ─── */}
+      <section id="plan-itinerary" className="py-20 bg-cream border-t border-obsidian/5">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+          <div className="text-center max-w-2xl mx-auto space-y-2">
+            <span className="text-primary text-xs font-bold uppercase tracking-widest block font-display">Custom Experience</span>
+            <h2 className="text-3xl font-extrabold text-obsidian font-display leading-tight">
+              Plan Your Dream Kashmir Itinerary
+            </h2>
+            <p className="text-xs text-obsidian/60 font-light leading-relaxed">
+              Tell us where you want to travel, and our specialist travel advisors will construct a custom itinerary, negotiate local operator rates, and deliver a clean digital PDF quote.
+            </p>
+          </div>
+
+          <Card className="p-6 md:p-10 bg-white border border-obsidian/10 shadow-lg rounded-3xl">
+            {itinerarySuccess ? (
+              <div className="p-6 bg-[#00c98e]/10 border border-[#00c98e]/35 rounded-2xl text-center space-y-3">
+                <CheckCircle2 className="w-10 h-10 text-[#00c98e] mx-auto animate-bounce" />
+                <h3 className="font-bold text-base text-obsidian font-display">Request Received!</h3>
+                <p className="text-xs text-obsidian/75 leading-relaxed max-w-md mx-auto">{itinerarySuccess}</p>
+              </div>
+            ) : (
+              <form onSubmit={handleItinerarySubmit} className="space-y-6">
+                
+                {/* Honeypot Spam Protection Field - Hidden from users */}
+                <input 
+                  type="text" 
+                  name="website_confirm"
+                  value={itineraryForm.website_confirm}
+                  onChange={e => setItineraryForm({ ...itineraryForm, website_confirm: e.target.value })}
+                  className="hidden" 
+                  tabIndex={-1} 
+                  autoComplete="off" 
+                />
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-[10px] font-bold text-obsidian/50 uppercase tracking-wider mb-1">Your Name</label>
+                    <input 
+                      type="text" 
+                      placeholder="Enter full name"
+                      value={itineraryForm.name}
+                      onChange={e => setItineraryForm({ ...itineraryForm, name: e.target.value })}
+                      className="w-full px-3.5 py-2.5 bg-sand/30 border border-obsidian/10 text-xs text-obsidian rounded-xl outline-none focus:bg-white focus:border-primary"
+                      required 
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-obsidian/50 uppercase tracking-wider mb-1">Email Address</label>
+                    <input 
+                      type="email" 
+                      placeholder="email@example.com"
+                      value={itineraryForm.email}
+                      onChange={e => setItineraryForm({ ...itineraryForm, email: e.target.value })}
+                      className="w-full px-3.5 py-2.5 bg-sand/30 border border-obsidian/10 text-xs text-obsidian rounded-xl outline-none focus:bg-white focus:border-primary"
+                      required 
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-[10px] font-bold text-obsidian/50 uppercase tracking-wider mb-1">Phone Number</label>
+                    <input 
+                      type="text" 
+                      placeholder="e.g. +91 98765 43210"
+                      value={itineraryForm.phone}
+                      onChange={e => setItineraryForm({ ...itineraryForm, phone: e.target.value })}
+                      className="w-full px-3.5 py-2.5 bg-sand/30 border border-obsidian/10 text-xs text-obsidian rounded-xl outline-none focus:bg-white focus:border-primary"
+                      required 
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-obsidian/50 uppercase tracking-wider mb-1">Destination Zone</label>
+                    <select 
+                      value={itineraryForm.destination}
+                      onChange={e => setItineraryForm({ ...itineraryForm, destination: e.target.value })}
+                      className="w-full px-3.5 py-2.5 bg-sand/30 border border-obsidian/10 text-xs text-obsidian rounded-xl outline-none focus:bg-white focus:border-primary cursor-pointer"
+                    >
+                      <option value="">Select location...</option>
+                      <option value="Gulmarg">Gulmarg</option>
+                      <option value="Srinagar">Srinagar</option>
+                      <option value="Sonamarg">Sonamarg</option>
+                      <option value="Pahalgam">Pahalgam</option>
+                      <option value="Gurez Valley">Gurez Valley</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-obsidian/50 uppercase tracking-wider mb-1">Preferred Date</label>
+                    <input 
+                      type="date" 
+                      value={itineraryForm.date}
+                      onChange={e => setItineraryForm({ ...itineraryForm, date: e.target.value })}
+                      className="w-full px-3.5 py-2.5 bg-sand/30 border border-obsidian/10 text-xs text-obsidian rounded-xl outline-none focus:bg-white focus:border-primary cursor-pointer"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-bold text-obsidian/50 uppercase tracking-wider mb-1">Itinerary Details / Notes</label>
+                  <textarea 
+                    rows={4}
+                    placeholder="Tell us what you want to experience, special physical conditions, guide requirements..."
+                    value={itineraryForm.notes}
+                    onChange={e => setItineraryForm({ ...itineraryForm, notes: e.target.value })}
+                    className="w-full px-3.5 py-2.5 bg-sand/30 border border-obsidian/10 text-xs text-obsidian rounded-xl outline-none focus:bg-white focus:border-primary resize-none"
+                  />
+                </div>
+
+                {itineraryError && (
+                  <div className="text-xs text-red-500 font-medium">
+                    ⚠️ {itineraryError}
+                  </div>
+                )}
+
+                <Button 
+                  type="submit" 
+                  disabled={itineraryLoading}
+                  className="w-full justify-center py-3"
+                >
+                  {itineraryLoading ? 'Sending Itinerary Request...' : 'Send Itinerary Request'}
+                </Button>
+              </form>
+            )}
+          </Card>
+        </div>
+      </section>
+
       {/* ─── BROWSE BY CATEGORY ─── */}
       <section className="py-20 bg-cream/50 border-y border-obsidian/5">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
@@ -379,32 +613,35 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ─── WHY WANDERTRIBE (VALUE PROPS) ─── */}
+      {/* ─── WHY WANDERTRIBE (VALUE PROPS & FOUNDER CREDENTIALS) ─── */}
       <section id="why-us" className="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
         <div className="text-center max-w-2xl mx-auto space-y-2">
-          <span className="text-primary text-xs font-bold uppercase tracking-widest block font-display">The Wandertribe Way</span>
+          <span className="text-primary text-xs font-bold uppercase tracking-widest block font-display">Founder Credibility</span>
           <h2 className="text-3xl font-extrabold text-obsidian font-display leading-tight">
-            Built for Bold Travelers
+            Built on Operational Excellence
           </h2>
+          <p className="text-xs text-obsidian/60 font-light max-w-md mx-auto leading-relaxed">
+            By applying rigorous corporate management frameworks to local travel logistics, we ensure your high-altitude treks are safe, punctual, and reliable.
+          </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           {[
             {
-              title: "Local Kashmiri Guides",
-              desc: "Every trek and ski expedition is led by certified, native alpine professionals who know the ridges and mountain safety."
+              title: "Six Sigma Operational Precision",
+              desc: "We utilize Six Sigma quality control methodologies to eliminate booking overlap, coordinate transportation timings, and vet alpine equipment safety."
             },
             {
-              title: "Flexible Rebooking",
-              desc: "Unexpected pass closure? Weather delay? Reschedule or cancel up to 7 days before departure with zero penalties."
+              title: "ITIL Service Quality",
+              desc: "Our customer response systems are built on ITIL service management frameworks to guarantee 24/7 support reliability and rapid incident management."
             },
             {
-              title: "24/7 Adventure Support",
-              desc: "Emergency satellite dispatch and local coordination networks ensure worry-free alpine excursions."
+              title: "Verified Local Guides",
+              desc: "Every ski and trek expedition is led by native Kashmiri guides who are certified mountaineers and trained in wilderness first response."
             },
             {
-              title: "Fair Reseller Margins",
-              desc: "We work directly with homeboat owners, guides, and mountain transport. No hidden middleman markups."
+              title: "Direct Supplier Margin",
+              desc: "We work directly with homeboat owners, guides, and horsemen in the valleys, guaranteeing complete fee transparency without middleman markups."
             }
           ].map((vp, i) => (
             <Card key={i} className="p-6 space-y-4 bg-cream border-obsidian/5 hover:border-secondary/20 shadow-sm flex flex-col justify-between">
@@ -412,7 +649,7 @@ export default function HomePage() {
                 <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-secondary to-primary/10 flex items-center justify-center text-secondary">
                   <CheckCircle2 className="w-5 h-5 text-cream" />
                 </div>
-                <h3 className="font-bold text-base text-obsidian font-display">{vp.title}</h3>
+                <h3 className="font-bold text-sm text-obsidian font-display">{vp.title}</h3>
                 <p className="text-xs text-obsidian/60 leading-relaxed font-light">{vp.desc}</p>
               </div>
             </Card>
@@ -517,6 +754,133 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* ─── B2B PARTNER NETWORK INVITATION ─── */}
+      <section id="partners" className="py-20 bg-cream/35 border-t border-obsidian/5">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+          <div className="text-center max-w-2xl mx-auto space-y-2">
+            <span className="text-secondary text-xs font-bold uppercase tracking-widest block font-display">B2B Partnerships</span>
+            <h2 className="text-3xl font-extrabold text-obsidian font-display leading-tight">
+              Partner with Wandertribe
+            </h2>
+            <p className="text-xs text-obsidian/60 font-light leading-relaxed">
+              Are you a local Kashmiri guesthouse owner, houseboat operator, transport provider, or certified alpine guide? Apply to join our network. We work directly with local operators to build sustainable border tourism.
+            </p>
+          </div>
+
+          <Card className="p-6 md:p-10 bg-white border border-obsidian/10 shadow-lg rounded-3xl">
+            {partnerSuccess ? (
+              <div className="p-6 bg-[#00c98e]/10 border border-[#00c98e]/35 rounded-2xl text-center space-y-3">
+                <CheckCircle2 className="w-10 h-10 text-[#00c98e] mx-auto animate-bounce" />
+                <h3 className="font-bold text-base text-obsidian font-display">Application Submitted!</h3>
+                <p className="text-xs text-obsidian/75 leading-relaxed max-w-md mx-auto">{partnerSuccess}</p>
+              </div>
+            ) : (
+              <form onSubmit={handlePartnerSubmit} className="space-y-6">
+                
+                {/* Honeypot Spam Protection Field - Hidden from users */}
+                <input 
+                  type="text" 
+                  name="website_confirm"
+                  value={partnerForm.website_confirm}
+                  onChange={e => setPartnerForm({ ...partnerForm, website_confirm: e.target.value })}
+                  className="hidden" 
+                  tabIndex={-1} 
+                  autoComplete="off" 
+                />
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-[10px] font-bold text-obsidian/50 uppercase tracking-wider mb-1">Contact Name</label>
+                    <input 
+                      type="text" 
+                      placeholder="Enter contact person name"
+                      value={partnerForm.name}
+                      onChange={e => setPartnerForm({ ...partnerForm, name: e.target.value })}
+                      className="w-full px-3.5 py-2.5 bg-sand/30 border border-obsidian/10 text-xs text-obsidian rounded-xl outline-none focus:bg-white focus:border-primary"
+                      required 
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-obsidian/50 uppercase tracking-wider mb-1">Business Email</label>
+                    <input 
+                      type="email" 
+                      placeholder="partner@company.com"
+                      value={partnerForm.email}
+                      onChange={e => setPartnerForm({ ...partnerForm, email: e.target.value })}
+                      className="w-full px-3.5 py-2.5 bg-sand/30 border border-obsidian/10 text-xs text-obsidian rounded-xl outline-none focus:bg-white focus:border-primary"
+                      required 
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-[10px] font-bold text-obsidian/50 uppercase tracking-wider mb-1">Phone Number</label>
+                    <input 
+                      type="text" 
+                      placeholder="e.g. +91 98765 43210"
+                      value={partnerForm.phone}
+                      onChange={e => setPartnerForm({ ...partnerForm, phone: e.target.value })}
+                      className="w-full px-3.5 py-2.5 bg-sand/30 border border-obsidian/10 text-xs text-obsidian rounded-xl outline-none focus:bg-white focus:border-primary"
+                      required 
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-obsidian/50 uppercase tracking-wider mb-1">Company / Houseboat Name</label>
+                    <input 
+                      type="text" 
+                      placeholder="Optional"
+                      value={partnerForm.companyName}
+                      onChange={e => setPartnerForm({ ...partnerForm, companyName: e.target.value })}
+                      className="w-full px-3.5 py-2.5 bg-sand/30 border border-obsidian/10 text-xs text-obsidian rounded-xl outline-none focus:bg-white focus:border-primary"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-obsidian/50 uppercase tracking-wider mb-1">Partnership Type</label>
+                    <select 
+                      value={partnerForm.partnershipType}
+                      onChange={e => setPartnerForm({ ...partnerForm, partnershipType: e.target.value })}
+                      className="w-full px-3.5 py-2.5 bg-sand/30 border border-obsidian/10 text-xs text-obsidian rounded-xl outline-none focus:bg-white focus:border-primary cursor-pointer"
+                    >
+                      <option value="Certified Guide">Certified Alpine Guide</option>
+                      <option value="Houseboat Owner">Houseboat Owner</option>
+                      <option value="Transport Partner">Local Transport Partner</option>
+                      <option value="Guesthouse Owner">Guesthouse / Homestay Owner</option>
+                      <option value="Other">DMC / Operator Partner</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-bold text-obsidian/50 uppercase tracking-wider mb-1">Brief Description of Services / Message</label>
+                  <textarea 
+                    rows={3}
+                    placeholder="Tell us about your inventory, fleet size, guiding history, or general query..."
+                    value={partnerForm.message}
+                    onChange={e => setPartnerForm({ ...partnerForm, message: e.target.value })}
+                    className="w-full px-3.5 py-2.5 bg-sand/30 border border-obsidian/10 text-xs text-obsidian rounded-xl outline-none focus:bg-white focus:border-primary resize-none"
+                  />
+                </div>
+
+                {partnerError && (
+                  <div className="text-xs text-red-500 font-medium">
+                    ⚠️ {partnerError}
+                  </div>
+                )}
+
+                <Button 
+                  type="submit" 
+                  disabled={partnerLoading}
+                  className="w-full justify-center py-3"
+                >
+                  {partnerLoading ? 'Submitting Application...' : 'Apply to Partner Network'}
+                </Button>
+              </form>
+            )}
+          </Card>
+        </div>
+      </section>
+
       {/* ─── FOOTER ─── */}
       <footer className="bg-obsidian text-sand/60 py-16 border-t border-cream/5 text-xs">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
@@ -576,10 +940,11 @@ export default function HomePage() {
         </div>
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 border-t border-cream/5 flex flex-col md:flex-row justify-between items-center gap-4 text-sand/40">
-          <p>© 2026 Wandertribe Adventure Platforms. All rights reserved.</p>
-          <div className="flex gap-4">
+          <p>© 2026 Wandertribe Adventure Platforms. All rights reserved. | GSTIN: [REAL_GSTIN]</p>
+          <div className="flex gap-4 font-semibold">
             <Link href="/privacy" className="hover:text-cream transition-colors">Privacy Policy</Link>
             <Link href="/terms" className="hover:text-cream transition-colors">Terms of Service</Link>
+            <Link href="/refund-policy" className="hover:text-cream transition-colors">Cancellation &amp; Refunds</Link>
           </div>
         </div>
       </footer>

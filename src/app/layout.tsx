@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "sonner";
+import Script from "next/script";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -55,6 +56,19 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col bg-sand text-obsidian selection:bg-primary/20 selection:text-primary">
+        {/* Google Analytics GA4 */}
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=[REAL_GA4_MEASUREMENT_ID]"
+          strategy="afterInteractive"
+        />
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', '[REAL_GA4_MEASUREMENT_ID]');
+          `}
+        </Script>
         {children}
         <Toaster richColors position="top-right" />
       </body>
