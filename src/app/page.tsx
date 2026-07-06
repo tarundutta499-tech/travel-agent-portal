@@ -2,110 +2,116 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Button } from '@/components/ui/Button';
+import { Card } from '@/components/ui/Card';
 import { 
-  Plane, Search, Compass, Star, MapPin, Calendar, Clock, 
-  Users, CheckCircle2, ChevronRight, Menu, X, ArrowRight, 
-  Phone, Mail, Shield, User, Globe, Award, Sparkles, MessageSquare 
+  Compass, MapPin, Calendar, Users, Heart, Star, ShieldCheck, 
+  Map, MessageSquare, Award, Navigation, Menu, X, ArrowRight, 
+  Phone, Mail, CheckCircle2, ChevronLeft, ChevronRight, Play,
+  Send, Sparkles, Clock
 } from 'lucide-react';
 import Link from 'next/link';
-import { mockPackages, mockHotels } from '@/lib/mock-data';
-import { formatCurrency } from '@/lib/utils';
+import { mockPackages, mockDestinations } from '@/lib/mock-data';
+
+const formatCurrency = (val: number) => {
+  return new Intl.NumberFormat('en-IN', {
+    style: 'currency',
+    currency: 'INR',
+    maximumFractionDigits: 0,
+  }).format(val);
+};
+
+const testimonials = [
+  {
+    id: 1,
+    name: 'Sarah Jenkins',
+    location: 'United Kingdom',
+    quote: 'The Gulmarg ski runs were incredible. Our guide Riyaz checked avalanche reports hourly and kept us extremely safe while finding deep backcountry powder!',
+    rating: 5,
+    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=sarah'
+  },
+  {
+    id: 2,
+    name: 'Marco Rossi',
+    location: 'Italy',
+    quote: 'Staying in the cedar houseboat on Dal Lake was magical. Waking up to the sunrise floating market and taking a Shikara to historical gardens is a dream.',
+    rating: 5,
+    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=marco'
+  },
+  {
+    id: 3,
+    name: 'Tanya Mehta',
+    location: 'India',
+    quote: 'The Gurez border caravan was beautiful. Hiking near Habba Khatoon Peak and visiting remote wooden Dardic villages was a once-in-a-lifetime experience.',
+    rating: 5,
+    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=tanya'
+  }
+];
+
+const categories = [
+  { name: 'Skiing', icon: Award, count: 2, bg: 'from-[#FF5A36]/10 to-[#FF5A36]/5' },
+  { name: 'Trekking', icon: Compass, count: 4, bg: 'from-[#0F5C66]/10 to-[#0F5C66]/5' },
+  { name: 'Cultural', icon: Sparkles, count: 3, bg: 'from-amber-500/10 to-amber-500/5' },
+  { name: 'Wildlife', icon: Map, count: 1, bg: 'from-purple-500/10 to-purple-500/5' },
+  { name: 'Road Trips', icon: MapPin, count: 3, bg: 'from-emerald-500/10 to-emerald-500/5' },
+  { name: 'Diving', icon: ShieldCheck, count: 1, bg: 'from-blue-500/10 to-blue-500/5' }
+];
 
 export default function HomePage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [searchDest, setSearchDest] = useState('');
-  const [searchCategory, setSearchCategory] = useState('all');
-  const [inquiryModalOpen, setInquiryModalOpen] = useState(false);
-  const [inquirySubmitted, setInquirySubmitted] = useState(false);
-  
-  // Form state
-  const [inquiryForm, setInquiryForm] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    destination: '',
-    date: '',
-    guests: '2',
-    notes: ''
-  });
+  const [activeTestimonial, setActiveTestimonial] = useState(0);
+  const [savedPackages, setSavedPackages] = useState<string[]>([]);
+  const [searchParams, setSearchParams] = useState({ destination: '', dates: '', guests: '2' });
+  const [newsletterEmail, setNewsletterEmail] = useState('');
+  const [newsletterSubscribed, setNewsletterSubscribed] = useState(false);
 
-  const handleInquirySubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setInquirySubmitted(true);
-    setTimeout(() => {
-      setInquirySubmitted(false);
-      setInquiryModalOpen(false);
-      setInquiryForm({ name: '', email: '', phone: '', destination: '', date: '', guests: '2', notes: '' });
-    }, 3000);
+  const toggleSavePackage = (id: string) => {
+    setSavedPackages(prev => 
+      prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+    );
   };
 
-  // Only show published packages on public site
-  const publicPackages = mockPackages.filter(p => p.status === 'published');
+  const nextTestimonial = () => {
+    setActiveTestimonial(prev => (prev + 1) % testimonials.length);
+  };
 
-  // Filter packages based on on-page search inputs
-  const filteredPackages = publicPackages.filter(p => {
-    const matchDest = p.name.toLowerCase().includes(searchDest.toLowerCase()) || 
-                      p.destinations.some(d => d.name.toLowerCase().includes(searchDest.toLowerCase()));
-    const matchCat = searchCategory === 'all' || p.category === searchCategory;
-    return matchDest && matchCat;
-  });
-
-  const categories = [
-    { value: 'all', label: 'All Experiences' },
-    { value: 'luxury', label: 'Luxury Stays' },
-    { value: 'honeymoon', label: 'Honeymoon Escapes' },
-    { value: 'adventure', label: 'Adventure Treks' },
-    { value: 'group', label: 'Group Tours' },
-    { value: 'family', label: 'Family Getaways' }
-  ];
+  const prevTestimonial = () => {
+    setActiveTestimonial(prev => (prev - 1 + testimonials.length) % testimonials.length);
+  };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#F8FAFC] text-slate-900 selection:bg-[#0F4C81]/20 selection:text-[#0F4C81]">
+    <div className="min-h-screen bg-sand text-obsidian flex flex-col font-sans antialiased">
       
-      {/* ─── PUBLIC HEADER ─── */}
-      <header className="sticky top-0 z-50 backdrop-blur-md bg-white/80 border-b border-slate-100 transition-all duration-200">
+      {/* ─── HEADER / NAVIGATION ─── */}
+      <header className="sticky top-0 z-50 bg-sand/80 backdrop-blur-md border-b border-obsidian/5">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-          {/* Logo */}
-          <Link href="/" className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#0F4C81] to-[#00A676] flex items-center justify-center shadow-md shadow-[#0F4C81]/10">
-              <Plane className="text-white w-5 h-5 -rotate-45" />
+          <Link href="/" className="flex items-center gap-2">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-primary to-secondary flex items-center justify-center shadow-md shadow-primary/20">
+              <Compass className="text-cream w-5 h-5 -rotate-45" />
             </div>
-            <div>
-              <span className="text-xl font-bold tracking-tight text-slate-950 font-poppins block leading-none">Voyage Luxe</span>
-              <span className="text-[10px] text-slate-500 font-medium tracking-widest uppercase mt-1 block">Travel Advisory</span>
-            </div>
+            <span className="text-xl font-bold tracking-tight text-obsidian font-display">Wandertribe</span>
           </Link>
 
-          {/* Desktop Navigation */}
+          {/* Desktop Nav Links */}
           <nav className="hidden md:flex items-center gap-8">
-            <a href="#experiences" className="text-sm font-medium text-slate-600 hover:text-[#0F4C81] transition-colors">Experiences</a>
-            <a href="#about" className="text-sm font-medium text-slate-600 hover:text-[#0F4C81] transition-colors">Why Choose Us</a>
-            <a href="#partners" className="text-sm font-medium text-slate-600 hover:text-[#0F4C81] transition-colors">Partner Program</a>
-            <a href="#contact" className="text-sm font-medium text-slate-600 hover:text-[#0F4C81] transition-colors">Contact</a>
+            <Link href="/packages" className="text-sm font-semibold text-obsidian/70 hover:text-primary transition-colors">Explore Trips</Link>
+            <Link href="/destinations" className="text-sm font-semibold text-obsidian/70 hover:text-primary transition-colors">Destinations</Link>
+            <Link href="#why-us" className="text-sm font-semibold text-obsidian/70 hover:text-primary transition-colors">Why Wandertribe</Link>
+            <Link href="#testimonials" className="text-sm font-semibold text-obsidian/70 hover:text-primary transition-colors">Stories</Link>
           </nav>
 
-          {/* Header Action Buttons */}
+          {/* Header Actions */}
           <div className="hidden md:flex items-center gap-4">
-            <Link 
-              href="/login" 
-              className="text-sm font-semibold text-slate-600 hover:text-[#0F4C81] transition-colors px-4 py-2"
-            >
-              Consultant Portal
-            </Link>
-            <button 
-              onClick={() => setInquiryModalOpen(true)}
-              className="bg-[#0F4C81] hover:bg-[#1a6ab5] text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-all duration-200 hover:shadow-lg hover:shadow-[#0F4C81]/15 active:scale-95"
-            >
-              Request Custom Quote
-            </button>
+            <Link href="/account" className="text-sm font-semibold text-obsidian/70 hover:text-primary transition-colors px-3 py-2">Account</Link>
+            <Button variant="primary" size="sm">Book Kashmir Adventure</Button>
           </div>
 
-          {/* Mobile Menu Toggle */}
+          {/* Mobile Menu Button */}
           <button 
             onClick={() => setMobileMenuOpen(true)}
-            className="md:hidden p-2 rounded-lg text-slate-600 hover:bg-slate-50 transition-colors"
+            className="md:hidden p-2 rounded-xl text-obsidian hover:bg-obsidian/5 transition-colors"
           >
-            <Menu className="w-6 h-6" />
+            <Menu className="w-5 h-5" />
           </button>
         </div>
       </header>
@@ -126,566 +132,457 @@ export default function HomePage() {
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed right-0 top-0 bottom-0 w-80 max-w-full bg-white z-50 p-6 flex flex-col shadow-2xl"
+              className="fixed right-0 top-0 bottom-0 w-80 max-w-full bg-sand z-50 p-6 flex flex-col shadow-2xl"
             >
               <div className="flex items-center justify-between mb-8">
-                <span className="text-lg font-bold font-poppins text-slate-900">Navigation</span>
+                <span className="text-lg font-bold font-display text-obsidian">Navigation</span>
                 <button 
                   onClick={() => setMobileMenuOpen(false)}
-                  className="p-2 rounded-lg hover:bg-slate-100 text-slate-500 transition-colors"
+                  className="p-2 rounded-xl hover:bg-obsidian/5 text-obsidian/70 transition-colors"
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
-              <div className="flex flex-col gap-5 flex-1">
-                <a href="#experiences" onClick={() => setMobileMenuOpen(false)} className="text-base font-semibold text-slate-700 hover:text-[#0F4C81] py-2 transition-colors border-b border-slate-50">Experiences</a>
-                <a href="#about" onClick={() => setMobileMenuOpen(false)} className="text-base font-semibold text-slate-700 hover:text-[#0F4C81] py-2 transition-colors border-b border-slate-50">Why Choose Us</a>
-                <a href="#partners" onClick={() => setMobileMenuOpen(false)} className="text-base font-semibold text-slate-700 hover:text-[#0F4C81] py-2 transition-colors border-b border-slate-50">Partner Program</a>
-                <a href="#contact" onClick={() => setMobileMenuOpen(false)} className="text-base font-semibold text-slate-700 hover:text-[#0F4C81] py-2 transition-colors border-b border-slate-50">Contact</a>
+              <div className="flex flex-col gap-4 flex-1">
+                <Link href="/packages" onClick={() => setMobileMenuOpen(false)} className="text-lg font-bold font-display text-obsidian/80 hover:text-primary py-2 border-b border-obsidian/5">Explore Trips</Link>
+                <Link href="/destinations" onClick={() => setMobileMenuOpen(false)} className="text-lg font-bold font-display text-obsidian/80 hover:text-primary py-2 border-b border-obsidian/5">Destinations</Link>
+                <Link href="#why-us" onClick={() => setMobileMenuOpen(false)} className="text-lg font-bold font-display text-obsidian/80 hover:text-primary py-2 border-b border-obsidian/5">Why Wandertribe</Link>
+                <Link href="#testimonials" onClick={() => setMobileMenuOpen(false)} className="text-lg font-bold font-display text-obsidian/80 hover:text-primary py-2 border-b border-obsidian/5">Stories</Link>
               </div>
 
-              <div className="space-y-4 pt-6 border-t border-slate-100">
-                <Link 
-                  href="/login" 
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="block text-center text-sm font-semibold text-slate-700 hover:bg-slate-50 py-3 rounded-xl transition-all"
-                >
-                  Consultant Portal
+              <div className="space-y-4 pt-6 border-t border-obsidian/10">
+                <Link href="/account" onClick={() => setMobileMenuOpen(false)} className="block text-center text-sm font-bold text-obsidian/70 py-3 rounded-2xl hover:bg-obsidian/5">
+                  My Profile
                 </Link>
-                <button 
-                  onClick={() => { setMobileMenuOpen(false); setInquiryModalOpen(true); }}
-                  className="w-full bg-[#0F4C81] hover:bg-[#1a6ab5] text-white text-sm font-semibold py-3 rounded-xl transition-all shadow-md shadow-[#0F4C81]/10"
+                <Button 
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="w-full justify-center"
                 >
-                  Request Custom Quote
-                </button>
+                  Book Kashmir Adventure
+                </Button>
               </div>
             </motion.div>
           </>
         )}
       </AnimatePresence>
 
-      {/* ─── LUXURY HERO SECTION ─── */}
-      <section className="relative bg-slate-950 text-white py-24 md:py-36 overflow-hidden flex flex-col justify-center">
-        {/* Background Image Overlay */}
-        <div className="absolute inset-0 bg-cover bg-center opacity-30 select-none pointer-events-none" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1600')" }} />
-        {/* Color overlay */}
-        <div className="absolute inset-0 bg-gradient-to-b from-slate-950/80 via-slate-950/60 to-slate-950/90" />
+      {/* ─── HERO SECTION ─── */}
+      <section className="relative bg-obsidian text-cream min-h-[85vh] flex flex-col justify-center py-20 overflow-hidden">
+        {/* Parallax Hero Image Cover */}
+        <div 
+          className="absolute inset-0 bg-cover bg-center opacity-45 select-none pointer-events-none scale-105"
+          style={{ backgroundImage: "url('https://images.unsplash.com/photo-1544735716-392fe2489ffa?w=1600')" }}
+        />
+        {/* Deep Overlay Grid */}
+        <div className="absolute inset-0 bg-gradient-to-b from-obsidian/70 via-obsidian/50 to-obsidian/90" />
 
-        <div className="relative z-10 max-w-5xl mx-auto px-4 text-center">
+        <div className="relative z-10 max-w-5xl mx-auto px-4 text-center space-y-8">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
+            className="space-y-4"
           >
-            <span className="text-[#00A676] uppercase tracking-widest text-xs font-bold font-poppins px-3 py-1.5 rounded-full bg-[#00A676]/10 border border-[#00A676]/20 inline-flex items-center gap-1.5 mb-6">
-              <Sparkles className="w-3 h-3" /> Bespoke Curated Itineraries
+            <span className="px-3.5 py-1.5 rounded-full text-xs font-extrabold uppercase tracking-widest text-[#00c98e] bg-[#00c98e]/10 border border-[#00c98e]/20 inline-flex items-center gap-1.5">
+              <Sparkles className="w-3.5 h-3.5" /> Kashmir-Exclusive Adventures
             </span>
-            <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight font-poppins text-white leading-[1.1] mb-6">
-              Journeys Crafted For The <br className="hidden md:inline" />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00c98e] via-[#60a5fa] to-[#1a6ab5]">
-                Discerning Explorer
-              </span>
+            <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight font-display text-cream leading-[1.05]">
+              Explore Kashmir <br /> Like Never Before.
             </h1>
-            <p className="text-lg md:text-xl text-slate-300 max-w-2xl mx-auto font-light leading-relaxed mb-12">
-              As travel consultants, we partner with the world&apos;s finest boutique properties, local tour partners, and luxury suppliers to curate unique, worry-free journeys.
+            <p className="text-base md:text-xl text-sand/80 max-w-2xl mx-auto font-light leading-relaxed">
+              Ditch the generic sightseeing buses. Book high-energy backcountry skiing in Gulmarg, raw glacial treks in Sonamarg, and offroad borderland caravans in Gurez.
             </p>
           </motion.div>
 
-          {/* Interactive Search Bar Widget */}
-          <motion.div 
+          {/* Search bar overlaid on Hero */}
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
-            className="max-w-4xl mx-auto bg-white/10 backdrop-blur-xl p-3 rounded-2xl md:rounded-full shadow-2xl border border-white/10 flex flex-col md:flex-row items-center gap-2"
+            className="max-w-4xl mx-auto bg-cream/10 backdrop-blur-xl p-3 rounded-2xl md:rounded-full border border-cream/10 shadow-2xl flex flex-col md:flex-row items-center gap-2"
           >
-            <div className="w-full flex-1 flex items-center gap-2 px-4 py-2 border-b md:border-b-0 md:border-r border-white/10">
-              <Search className="w-5 h-5 text-slate-400 flex-shrink-0" />
+            <div className="w-full flex-1 flex items-center gap-3 px-4 py-2.5 border-b md:border-b-0 md:border-r border-cream/10">
+              <MapPin className="w-5 h-5 text-[#FF856B]" />
+              <select 
+                value={searchParams.destination}
+                onChange={e => setSearchParams({ ...searchParams, destination: e.target.value })}
+                className="w-full bg-transparent border-none outline-none text-sm text-cream cursor-pointer focus:text-obsidian"
+              >
+                <option value="" className="text-obsidian">All Kashmir Locations</option>
+                <option value="Gulmarg" className="text-obsidian">Gulmarg</option>
+                <option value="Srinagar" className="text-obsidian">Srinagar</option>
+                <option value="Sonamarg" className="text-obsidian">Sonamarg</option>
+                <option value="Pahalgam" className="text-obsidian">Pahalgam</option>
+                <option value="Gurez Valley" className="text-obsidian">Gurez Valley</option>
+              </select>
+            </div>
+            
+            <div className="w-full md:w-52 flex items-center gap-3 px-4 py-2.5 border-b md:border-b-0 md:border-r border-cream/10">
+              <Calendar className="w-5 h-5 text-[#1D8A99]" />
               <input 
-                type="text" 
-                placeholder="Search by destination (e.g. Udaipur, Maldives...)"
-                value={searchDest}
-                onChange={e => setSearchDest(e.target.value)}
-                className="w-full bg-transparent border-none outline-none text-sm text-white placeholder-slate-400"
+                type="date" 
+                value={searchParams.dates}
+                onChange={e => setSearchParams({ ...searchParams, dates: e.target.value })}
+                className="w-full bg-transparent border-none outline-none text-sm text-cream cursor-pointer focus:text-obsidian"
               />
             </div>
 
-            <div className="w-full md:w-56 flex items-center gap-2 px-4 py-2 border-b md:border-b-0 md:border-r border-white/10">
-              <Compass className="w-5 h-5 text-slate-400 flex-shrink-0" />
+            <div className="w-full md:w-44 flex items-center gap-3 px-4 py-2.5">
+              <Users className="w-5 h-5 text-amber-400" />
               <select 
-                value={searchCategory}
-                onChange={e => setSearchCategory(e.target.value)}
-                className="w-full bg-transparent border-none outline-none text-sm text-white focus:text-slate-900 cursor-pointer"
+                value={searchParams.guests}
+                onChange={e => setSearchParams({ ...searchParams, guests: e.target.value })}
+                className="w-full bg-transparent border-none outline-none text-sm text-cream cursor-pointer focus:text-obsidian"
               >
-                {categories.map(c => (
-                  <option key={c.value} value={c.value} className="text-slate-900">{c.label}</option>
-                ))}
+                <option value="1">1 Explorer</option>
+                <option value="2">2 Explorers</option>
+                <option value="4">4 Explorers</option>
+                <option value="5+">5+ Group</option>
               </select>
             </div>
 
-            <button 
-              onClick={() => {
-                const el = document.getElementById('experiences');
-                el?.scrollIntoView({ behavior: 'smooth' });
-              }}
-              className="w-full md:w-auto bg-[#00A676] hover:bg-[#00c98e] text-white font-semibold text-sm px-8 py-3 rounded-xl md:rounded-full transition-all duration-200 flex items-center justify-center gap-2 whitespace-nowrap"
+            <Button 
+              className="w-full md:w-auto px-8 py-3 rounded-xl md:rounded-full whitespace-nowrap"
             >
-              Explore Packages <ChevronRight className="w-4 h-4" />
-            </button>
+              Search Kashmir Trips
+            </Button>
           </motion.div>
         </div>
       </section>
 
-      {/* ─── WHY CHOOSE US / VALUE PROPOSITION ─── */}
-      <section id="about" className="py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-3xl mx-auto mb-16">
-            <span className="text-[#0F4C81] text-xs font-bold uppercase tracking-widest block mb-2 font-poppins">Our Value</span>
-            <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-slate-900 font-poppins">
-              The Consultant Difference
-            </h2>
-            <div className="w-12 h-1 bg-[#0F4C81] mx-auto mt-4 rounded-full" />
-            <p className="text-slate-600 mt-6 leading-relaxed">
-              We aren&apos;t a cold booking search engine. We work side-by-side with local operators, verified hoteliers, and package partners to secure the absolute best amenities, luxury upgrades, and safety guarantees for your trip.
-            </p>
+      {/* ─── TRUST BAR ─── */}
+      <section className="bg-cream border-y border-obsidian/5 py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-6">
+          {/* Trust stats */}
+          <div className="grid grid-cols-3 gap-6 md:gap-16 w-full md:w-auto">
+            <div className="text-center md:text-left">
+              <span className="text-2xl md:text-3xl font-extrabold font-display text-primary">12k+</span>
+              <span className="block text-[10px] uppercase font-bold tracking-wider text-obsidian/50">Happy Explorers</span>
+            </div>
+            <div className="text-center md:text-left">
+              <span className="text-2xl md:text-3xl font-extrabold font-display text-secondary">5 Zones</span>
+              <span className="block text-[10px] uppercase font-bold tracking-wider text-obsidian/50">Kashmir Covered</span>
+            </div>
+            <div className="text-center md:text-left">
+              <span className="text-2xl md:text-3xl font-extrabold font-display text-forest">4.94</span>
+              <span className="block text-[10px] uppercase font-bold tracking-wider text-obsidian/50">Average Rating</span>
+            </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {[
-              {
-                icon: Award,
-                title: "Curated Boutique Partners",
-                desc: "We vet hotels, guides, and activity partners personally. Only top-tier properties (like The Leela Palace, Taj, & luxury overwater resorts) make it to our catalog."
-              },
-              {
-                icon: Shield,
-                title: "Reseller Markup Transparency",
-                desc: "As a consultant, we leverage trade rates with travel partners, passing bulk savings directly down to you while ensuring margin transparency."
-              },
-              {
-                icon: MessageSquare,
-                title: "24/7 Personalized Concierge",
-                desc: "Get direct phone and WhatsApp support from a dedicated travel consultant before, during, and after your trip. No wait-times or robots."
-              }
-            ].map((item, idx) => {
-              const Icon = item.icon;
-              return (
-                <div key={idx} className="p-8 rounded-2xl border border-slate-100 hover:border-slate-200 bg-[#F8FAFC]/50 hover:bg-white hover:shadow-xl hover:shadow-slate-100 transition-all duration-300">
-                  <div className="w-12 h-12 rounded-xl bg-[#0F4C81]/5 flex items-center justify-center mb-6">
-                    <Icon className="w-6 h-6 text-[#0F4C81]" />
-                  </div>
-                  <h3 className="text-lg font-bold text-slate-900 mb-3 font-poppins">{item.title}</h3>
-                  <p className="text-slate-600 text-sm leading-relaxed">{item.desc}</p>
+          {/* As featured in */}
+          <div className="flex items-center gap-6 flex-wrap justify-center opacity-40 grayscale">
+            <span className="text-xs font-bold uppercase tracking-widest font-display">NAT GEO</span>
+            <span className="text-xs font-bold uppercase tracking-widest font-display">LONELY PLANET</span>
+            <span className="text-xs font-bold uppercase tracking-widest font-display">TRIPADVISOR</span>
+            <span className="text-xs font-bold uppercase tracking-widest font-display">OUTSIDE MAG</span>
+          </div>
+        </div>
+      </section>
+
+      {/* ─── FEATURED PACKAGES GRID ─── */}
+      <section className="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-end mb-12">
+          <div>
+            <span className="text-primary text-xs font-bold uppercase tracking-widest block font-display">Kashmir Journeys</span>
+            <h2 className="text-3xl md:text-4xl font-extrabold text-obsidian font-display leading-tight">
+              Featured Expeditions
+            </h2>
+          </div>
+          <Link href="/packages" className="text-sm font-bold text-secondary hover:text-secondary-light flex items-center gap-1">
+            See all Kashmir trips <ArrowRight className="w-4 h-4" />
+          </Link>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {mockPackages.slice(0, 4).map(pkg => (
+            <Card key={pkg.id} hoverEffect="lift" className="flex flex-col bg-cream group">
+              <div className="relative aspect-[4/3] bg-obsidian/5 overflow-hidden">
+                <img 
+                  src={pkg.image} 
+                  alt={pkg.title} 
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                />
+                <button 
+                  onClick={() => toggleSavePackage(pkg.id)}
+                  className="absolute top-4 right-4 p-2 rounded-full bg-cream/90 backdrop-blur-md text-primary shadow-sm hover:scale-110 active:scale-95 transition-all"
+                >
+                  <Heart className={`w-4 h-4 ${savedPackages.includes(pkg.id) ? 'fill-current' : ''}`} />
+                </button>
+                <div className="absolute bottom-4 left-4 bg-obsidian/80 backdrop-blur-md text-cream px-3 py-1 rounded-xl text-[10px] font-bold uppercase tracking-wider">
+                  {pkg.difficulty}
                 </div>
+              </div>
+
+              <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-1.5 text-xs text-obsidian/50 font-medium">
+                    <span className="flex items-center gap-0.5"><Clock className="w-3.5 h-3.5 text-secondary" /> {pkg.duration}</span>
+                    <span>·</span>
+                    <span className="flex items-center gap-0.5"><Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" /> {pkg.rating}</span>
+                  </div>
+                  <h3 className="font-bold text-base text-obsidian font-display group-hover:text-primary transition-colors leading-tight">
+                    {pkg.title}
+                  </h3>
+                  <p className="text-xs text-obsidian/60 flex items-center gap-1">
+                    <MapPin className="w-3 h-3 text-primary" /> {pkg.destination}, Kashmir
+                  </p>
+                </div>
+
+                <div className="pt-3 border-t border-obsidian/5 flex items-center justify-between">
+                  <div>
+                    <span className="text-[9px] uppercase font-bold text-obsidian/40 block">From</span>
+                    <span className="text-base font-extrabold text-secondary font-display">{formatCurrency(pkg.price)}</span>
+                  </div>
+                  <Link href={`/packages/${pkg.slug}`}>
+                    <Button variant="outline" size="sm" className="rounded-xl">
+                      View Details
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+            </Card>
+          ))}
+        </div>
+      </section>
+
+      {/* ─── BROWSE BY CATEGORY ─── */}
+      <section className="py-20 bg-cream/50 border-y border-obsidian/5">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+          <div className="text-center max-w-2xl mx-auto space-y-2">
+            <span className="text-secondary text-xs font-bold uppercase tracking-widest block font-display">Experience Hub</span>
+            <h2 className="text-3xl font-extrabold text-obsidian font-display leading-tight">
+              Browse by Adventure Category
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            {categories.map(cat => {
+              const Icon = cat.icon;
+              return (
+                <Card 
+                  key={cat.name} 
+                  hoverEffect="tilt" 
+                  className="flex flex-col items-center justify-center p-6 text-center cursor-pointer bg-cream border border-obsidian/5 hover:border-primary/20"
+                >
+                  <div className={`w-12 h-12 rounded-2xl bg-gradient-to-tr ${cat.bg} flex items-center justify-center mb-4`}>
+                    <Icon className="w-5 h-5 text-primary" />
+                  </div>
+                  <h3 className="font-bold text-sm text-obsidian font-display">{cat.name}</h3>
+                  <p className="text-[10px] text-obsidian/40 uppercase tracking-wider font-semibold mt-1">
+                    {cat.count} Trips
+                  </p>
+                </Card>
               );
             })}
           </div>
         </div>
       </section>
 
-      {/* ─── FEATURED EXPERIENCES ─── */}
-      <section id="experiences" className="py-20 border-t border-slate-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          
-          <div className="flex flex-col md:flex-row md:items-end justify-between mb-12">
-            <div>
-              <span className="text-[#0F4C81] text-xs font-bold uppercase tracking-widest block mb-2 font-poppins">Curated Catalog</span>
-              <h2 className="text-3xl font-bold tracking-tight text-slate-900 font-poppins">Featured Experiences</h2>
-            </div>
-            <div className="flex gap-2 mt-4 md:mt-0 overflow-x-auto pb-2">
-              {categories.map(c => (
-                <button
-                  key={c.value}
-                  onClick={() => setSearchCategory(c.value)}
-                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
-                    searchCategory === c.value 
-                      ? 'bg-[#0F4C81] text-white shadow-md shadow-[#0F4C81]/15' 
-                      : 'bg-white text-slate-600 border border-slate-100 hover:bg-slate-50'
-                  }`}
-                >
-                  {c.label}
-                </button>
-              ))}
-            </div>
+      {/* ─── WHY WANDERTRIBE (VALUE PROPS) ─── */}
+      <section id="why-us" className="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
+        <div className="text-center max-w-2xl mx-auto space-y-2">
+          <span className="text-primary text-xs font-bold uppercase tracking-widest block font-display">The Wandertribe Way</span>
+          <h2 className="text-3xl font-extrabold text-obsidian font-display leading-tight">
+            Built for Bold Travelers
+          </h2>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          {[
+            {
+              title: "Local Kashmiri Guides",
+              desc: "Every trek and ski expedition is led by certified, native alpine professionals who know the ridges and mountain safety."
+            },
+            {
+              title: "Flexible Rebooking",
+              desc: "Unexpected pass closure? Weather delay? Reschedule or cancel up to 7 days before departure with zero penalties."
+            },
+            {
+              title: "24/7 Adventure Support",
+              desc: "Emergency satellite dispatch and local coordination networks ensure worry-free alpine excursions."
+            },
+            {
+              title: "Fair Reseller Margins",
+              desc: "We work directly with homeboat owners, guides, and mountain transport. No hidden middleman markups."
+            }
+          ].map((vp, i) => (
+            <Card key={i} className="p-6 space-y-4 bg-cream border-obsidian/5 hover:border-secondary/20 shadow-sm flex flex-col justify-between">
+              <div className="space-y-3">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-secondary to-primary/10 flex items-center justify-center text-secondary">
+                  <CheckCircle2 className="w-5 h-5 text-cream" />
+                </div>
+                <h3 className="font-bold text-base text-obsidian font-display">{vp.title}</h3>
+                <p className="text-xs text-obsidian/60 leading-relaxed font-light">{vp.desc}</p>
+              </div>
+            </Card>
+          ))}
+        </div>
+      </section>
+
+      {/* ─── TESTIMONIAL CAROUSEL ─── */}
+      <section id="testimonials" className="py-20 bg-obsidian text-cream overflow-hidden relative">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-primary/10 rounded-full blur-[100px]" />
+        <div className="absolute bottom-0 left-0 w-96 h-96 bg-secondary/15 rounded-full blur-[100px]" />
+
+        <div className="max-w-4xl mx-auto px-6 relative z-10 space-y-10">
+          <div className="text-center space-y-2">
+            <span className="text-primary text-xs font-bold uppercase tracking-widest block font-display">Traveler Stories</span>
+            <h2 className="text-3xl font-extrabold text-cream font-display leading-tight">
+              Reviewed by the Tribe
+            </h2>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {filteredPackages.map((pkg) => (
-              <motion.div 
-                key={pkg.id}
-                layout
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                transition={{ duration: 0.3 }}
-                className="bg-white rounded-2xl overflow-hidden border border-slate-100 hover:border-slate-200/80 hover:shadow-2xl hover:shadow-slate-100 group transition-all duration-300 flex flex-col"
-              >
-                {/* Cover Image */}
-                <div className="relative aspect-[4/3] overflow-hidden bg-slate-100">
-                  <img 
-                    src={pkg.coverImage || 'https://images.unsplash.com/photo-1599661046827-dacff0c0f09a?w=800'} 
-                    alt={pkg.name} 
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
-                  <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider text-[#0F4C81]">
-                    {pkg.category}
-                  </div>
-                  <div className="absolute bottom-4 right-4 bg-slate-900/85 backdrop-blur-md text-white px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5">
-                    <Clock className="w-3.5 h-3.5 text-[#00c98e]" /> {pkg.durationDays} Days / {pkg.durationNights} Nights
-                  </div>
-                </div>
-
-                {/* Content */}
-                <div className="p-6 flex-1 flex flex-col justify-between">
-                  <div>
-                    <div className="flex items-center gap-1 mb-2">
-                      <div className="flex text-amber-400">
-                        {Array.from({ length: 5 }).map((_, i) => (
-                          <Star key={i} className="w-3.5 h-3.5 fill-current" />
-                        ))}
-                      </div>
-                      <span className="text-[11px] font-medium text-slate-500 ml-1">Verified Partners</span>
-                    </div>
-
-                    <h3 className="text-lg font-bold text-slate-950 font-poppins group-hover:text-[#0F4C81] transition-colors leading-tight mb-2">
-                      {pkg.name}
-                    </h3>
-                    
-                    <p className="text-slate-600 text-xs line-clamp-2 leading-relaxed mb-4">
-                      {pkg.shortDescription}
-                    </p>
-
-                    <div className="flex flex-wrap gap-1.5 mb-6">
-                      {pkg.destinations.map(d => (
-                        <span key={d.id} className="text-[11px] font-medium px-2 py-0.5 rounded-md bg-slate-50 border border-slate-100 text-slate-600 flex items-center gap-1">
-                          <MapPin className="w-2.5 h-2.5 text-[#0F4C81]" /> {d.name}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="pt-4 border-t border-slate-50 flex items-center justify-between">
-                    <div>
-                      <span className="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">Starting From</span>
-                      <span className="text-xl font-bold font-poppins text-[#0F4C81]">{formatCurrency(pkg.sellingPrice)}</span>
-                      <span className="text-[10px] text-slate-500 block">per traveler</span>
-                    </div>
-
-                    <Link 
-                      href={`/packages/${pkg.slug}`}
-                      className="bg-slate-100 hover:bg-[#0F4C81] text-slate-700 hover:text-white px-4 py-2.5 rounded-xl font-semibold text-xs transition-all duration-200 flex items-center gap-1 group-hover:shadow-lg group-hover:shadow-[#0F4C81]/10"
-                    >
-                      View Details <ChevronRight className="w-3.5 h-3.5" />
-                    </Link>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-
-            {filteredPackages.length === 0 && (
-              <div className="col-span-full py-16 bg-white rounded-2xl border border-slate-100 text-center">
-                <Compass className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-                <h3 className="text-base font-bold text-slate-900 font-poppins">No experiences found</h3>
-                <p className="text-slate-500 text-xs mt-1">Try resetting your experience filter or editing your destination search.</p>
+          <div className="relative bg-cream/5 border border-cream/10 p-8 md:p-12 rounded-3xl backdrop-blur-md">
+            <div className="flex flex-col items-center text-center space-y-6">
+              <div className="flex text-amber-400">
+                {Array.from({ length: testimonials[activeTestimonial].rating }).map((_, i) => (
+                  <Star key={i} className="w-4 h-4 fill-current" />
+                ))}
               </div>
+
+              <blockquote className="text-base md:text-xl font-light leading-relaxed italic text-sand">
+                &ldquo;{testimonials[activeTestimonial].quote}&rdquo;
+              </blockquote>
+
+              <div className="flex items-center gap-3">
+                <img 
+                  src={testimonials[activeTestimonial].avatar} 
+                  alt={testimonials[activeTestimonial].name} 
+                  className="w-10 h-10 rounded-full border border-cream/20 bg-cream/10"
+                />
+                <div className="text-left">
+                  <p className="font-bold text-sm text-cream font-display leading-none">{testimonials[activeTestimonial].name}</p>
+                  <p className="text-xs text-sand/50 mt-1">{testimonials[activeTestimonial].location}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Carousel navigation controls */}
+            <div className="flex justify-center gap-2 mt-8">
+              <button 
+                onClick={prevTestimonial}
+                className="p-2 rounded-xl bg-cream/5 hover:bg-cream/10 border border-cream/10 hover:text-primary transition-all active:scale-95"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              <button 
+                onClick={nextTestimonial}
+                className="p-2 rounded-xl bg-cream/5 hover:bg-cream/10 border border-cream/10 hover:text-primary transition-all active:scale-95"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ─── NEWSLETTER SIGNUP ─── */}
+      <section className="py-20 max-w-4xl mx-auto px-4">
+        <div className="bg-gradient-to-tr from-secondary to-[#0C4E57] rounded-3xl p-8 md:p-12 text-center text-cream relative overflow-hidden shadow-2xl border border-cream/10">
+          <div className="absolute -top-10 -left-10 w-44 h-44 bg-primary/20 rounded-full blur-[40px] pointer-events-none" />
+          <div className="relative z-10 space-y-6">
+            <span className="text-primary text-xs font-bold uppercase tracking-widest block font-display">Special Offers</span>
+            <h2 className="text-3xl font-extrabold text-cream font-display leading-tight">
+              Get 10% Off Your First Trip
+            </h2>
+            <p className="text-sm text-sand/80 max-w-md mx-auto leading-relaxed font-light">
+              Join the Wandertribe list. Get weekly Kashmir snow alerts, offroad maps, and a 10% voucher code directly in your inbox.
+            </p>
+
+            {newsletterSubscribed ? (
+              <div className="max-w-md mx-auto p-4 bg-[#00c98e]/10 border border-[#00c98e]/35 rounded-2xl text-xs font-medium text-cream flex items-center justify-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-[#00c98e]" /> Voucher sent! Check your inbox for your 10% code.
+              </div>
+            ) : (
+              <form onSubmit={e => { e.preventDefault(); setNewsletterSubscribed(true); }} className="max-w-md mx-auto flex flex-col sm:flex-row gap-2">
+                <input 
+                  type="email" 
+                  value={newsletterEmail}
+                  onChange={e => setNewsletterEmail(e.target.value)}
+                  placeholder="Enter your email" 
+                  className="flex-1 px-4 py-3 rounded-2xl bg-cream/10 border border-cream/20 text-sm text-cream placeholder-sand/50 focus:bg-cream/20 focus:border-primary outline-none"
+                  required 
+                />
+                <Button 
+                  type="submit"
+                  variant="primary"
+                  className="px-6 py-3 rounded-2xl font-bold flex items-center justify-center gap-1.5"
+                >
+                  Join Tribe <Send className="w-4 h-4" />
+                </Button>
+              </form>
             )}
           </div>
         </div>
       </section>
 
-      {/* ─── DUAL PARTNER INVITATION SECTION (ATTRACT PARTNERS) ─── */}
-      <section id="partners" className="py-24 bg-gradient-to-tr from-slate-950 via-slate-900 to-[#0F4C81] text-white relative overflow-hidden">
-        {/* Background blobs */}
-        <div className="absolute top-0 right-0 w-96 h-96 bg-[#00A676]/10 rounded-full blur-[100px]" />
-        <div className="absolute bottom-0 left-0 w-96 h-96 bg-[#0F4C81]/25 rounded-full blur-[100px]" />
-
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-            
-            <div className="lg:col-span-7 space-y-6">
-              <span className="text-[#00c98e] text-xs font-bold uppercase tracking-widest block font-poppins">B2B Travel Partnership</span>
-              <h2 className="text-3xl md:text-5xl font-bold tracking-tight font-poppins text-white leading-tight">
-                Are You a Travel Supplier, DMC, or Hotel Partner?
-              </h2>
-              <p className="text-slate-300 text-base md:text-lg font-light leading-relaxed">
-                We act as specialized consultants matching high-net-worth clients, corporate traveler groups, and luxury seekers to selected destinations. List your properties, packages, and local tours on our marketplace.
-              </p>
-              
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-4">
-                {[
-                  {
-                    title: "Access HNW Clients",
-                    desc: "Skip marketing costs. We present your packages directly to verified premium travelers and corporate entities."
-                  },
-                  {
-                    title: "Unified Agent Portal",
-                    desc: "Manage package pricing, itinerary drafts, active deals, and sales analytics through our state-of-the-art console."
-                  },
-                  {
-                    title: "Instant Commission Flow",
-                    desc: "Transparent B2B margins and secure escrow/bank guarantees on every consult-matched booking."
-                  },
-                  {
-                    title: "Joint Itinerary Building",
-                    desc: "Co-build and draft customized trips inside the platform using our real-time approval pipelines."
-                  }
-                ].map((item, idx) => (
-                  <div key={idx} className="flex gap-3">
-                    <CheckCircle2 className="w-5 h-5 text-[#00c98e] flex-shrink-0 mt-0.5" />
-                    <div>
-                      <h4 className="font-semibold text-white font-poppins text-sm">{item.title}</h4>
-                      <p className="text-slate-400 text-xs leading-relaxed mt-1">{item.desc}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="lg:col-span-5 bg-white/5 backdrop-blur-md p-8 rounded-3xl border border-white/10 shadow-2xl space-y-6">
-              <h3 className="text-xl font-bold font-poppins text-white">Partner Program Pitch</h3>
-              <p className="text-slate-300 text-xs leading-relaxed">
-                Submit your contact details and company type (DMC, Hotelier, Local Agency, Transport). A Voyage Luxe consultant will schedule a virtual call to integrate your inventory and show you how to leverage our agent portal.
-              </p>
-
-              <form className="space-y-4" onSubmit={e => { e.preventDefault(); setInquirySubmitted(true); setTimeout(() => setInquirySubmitted(false), 2000); }}>
-                <div>
-                  <label className="block text-[11px] font-semibold text-slate-300 uppercase tracking-wider mb-1">Company Name</label>
-                  <input type="text" placeholder="e.g. Royal Travels DMC" className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-400 text-xs focus:bg-white/10 focus:border-[#00c98e] outline-none" required />
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-[11px] font-semibold text-slate-300 uppercase tracking-wider mb-1">Contact Person</label>
-                    <input type="text" placeholder="Your Name" className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-400 text-xs focus:bg-white/10 focus:border-[#00c98e] outline-none" required />
-                  </div>
-                  <div>
-                    <label className="block text-[11px] font-semibold text-slate-300 uppercase tracking-wider mb-1">Partnership Type</label>
-                    <select className="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-white/10 text-white text-xs focus:bg-white/10 focus:border-[#00c98e] outline-none cursor-pointer">
-                      <option>DMC / Local Operator</option>
-                      <option>Boutique Hotel / Resort</option>
-                      <option>Transport / Cruise Partner</option>
-                      <option>Tour / Guide Association</option>
-                    </select>
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-[11px] font-semibold text-slate-300 uppercase tracking-wider mb-1">Corporate Email</label>
-                  <input type="email" placeholder="partner@yourcompany.com" className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-400 text-xs focus:bg-white/10 focus:border-[#00c98e] outline-none" required />
-                </div>
-
-                <button 
-                  type="submit"
-                  className="w-full bg-[#00A676] hover:bg-[#00c98e] text-white font-semibold text-xs py-3 rounded-xl transition-all duration-200 flex items-center justify-center gap-1.5 shadow-lg shadow-[#00A676]/10"
-                >
-                  Apply to Partner Network <ArrowRight className="w-3.5 h-3.5" />
-                </button>
-              </form>
-            </div>
-
-          </div>
-        </div>
-      </section>
-
-      {/* ─── PUBLIC CONSULTATION FORM SECTION ─── */}
-      <section id="contact" className="py-20 bg-slate-50 border-t border-slate-100">
-        <div className="max-w-4xl mx-auto px-4">
-          <div className="bg-white rounded-3xl p-8 md:p-12 border border-slate-100 shadow-xl shadow-slate-100 text-center space-y-6">
-            <span className="text-[#0F4C81] text-xs font-bold uppercase tracking-widest block font-poppins">Get a Customized Proposal</span>
-            <h2 className="text-3xl font-bold tracking-tight text-slate-900 font-poppins">
-              Plan Your Dream Itinerary
-            </h2>
-            <p className="text-slate-600 text-sm max-w-xl mx-auto leading-relaxed">
-              Tell us where you want to travel, and our specialist travel advisors will construct a custom itinerary, negotiate local package discounts with partners, and deliver a clean digital PDF quote.
-            </p>
-
-            <button 
-              onClick={() => setInquiryModalOpen(true)}
-              className="bg-[#0F4C81] hover:bg-[#1a6ab5] text-white font-semibold px-8 py-3.5 rounded-2xl transition-all duration-200 hover:shadow-lg hover:shadow-[#0F4C81]/15 inline-flex items-center gap-2"
-            >
-              Start Travel Consultation Form <ArrowRight className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
-      </section>
-
       {/* ─── FOOTER ─── */}
-      <footer className="bg-slate-950 text-slate-400 py-12 border-t border-slate-900">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-4 gap-8">
+      <footer className="bg-obsidian text-sand/60 py-16 border-t border-cream/5 text-xs">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
+          
           <div className="space-y-4">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-[#0F4C81] to-[#00A676] flex items-center justify-center">
-                <Plane className="text-white w-4 h-4 -rotate-45" />
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-primary to-secondary flex items-center justify-center">
+                <Compass className="text-cream w-4 h-4 -rotate-45" />
               </div>
-              <span className="text-lg font-bold text-white font-poppins">Voyage Luxe</span>
+              <span className="text-lg font-bold text-cream font-display">Wandertribe</span>
             </div>
-            <p className="text-xs text-slate-500 leading-relaxed">
-              Curating high-end bespoke holiday experiences in partnerships with elite local DMCs and premier luxury resorts.
+            <p className="leading-relaxed font-light text-sand/40">
+              Vibrant, adventure-first travel experiences curated for the independent explorer.
             </p>
           </div>
 
           <div>
-            <h4 className="text-sm font-bold text-white uppercase tracking-wider mb-4 font-poppins">Destinations</h4>
-            <ul className="space-y-2 text-xs">
-              <li><a href="#experiences" className="hover:text-white transition-colors">Udaipur, Rajasthan</a></li>
-              <li><a href="#experiences" className="hover:text-white transition-colors">Goa Beaches</a></li>
-              <li><a href="#experiences" className="hover:text-white transition-colors">Maldives Lagoons</a></li>
-              <li><a href="#experiences" className="hover:text-white transition-colors">Manali Peaks</a></li>
+            <h4 className="text-sm font-bold text-cream uppercase tracking-wider mb-4 font-display">Popular Adventures</h4>
+            <ul className="space-y-2">
+              <li><Link href="/packages/gulmarg-ski-expedition" className="hover:text-cream transition-colors">Gulmarg Ski Expedition</Link></li>
+              <li><Link href="/packages/sonamarg-glacier-trek" className="hover:text-cream transition-colors">Sonamarg Glacier Trek</Link></li>
+              <li><Link href="/packages/dal-lake-houseboat-retreat" className="hover:text-cream transition-colors">Dal Lake Houseboat Retreat</Link></li>
+              <li><Link href="/packages/pahalgam-aru-valley-trail" className="hover:text-cream transition-colors">Pahalgam Aru Valley Trail</Link></li>
             </ul>
           </div>
 
           <div>
-            <h4 className="text-sm font-bold text-white uppercase tracking-wider mb-4 font-poppins">Partners</h4>
-            <ul className="space-y-2 text-xs">
-              <li><a href="#partners" className="hover:text-white transition-colors">List your hotel / stay</a></li>
-              <li><a href="#partners" className="hover:text-white transition-colors">DMC Agent Program</a></li>
-              <li><a href="#partners" className="hover:text-white transition-colors">Margin structures</a></li>
-              <li><Link href="/login" className="hover:text-white transition-colors">Access Portal</Link></li>
+            <h4 className="text-sm font-bold text-cream uppercase tracking-wider mb-4 font-display">Wandertribe</h4>
+            <ul className="space-y-2">
+              <li><Link href="/about" className="hover:text-cream transition-colors">About our Story</Link></li>
+              <li><Link href="/faq" className="hover:text-cream transition-colors">Support &amp; FAQ</Link></li>
+              <li><Link href="/careers" className="hover:text-cream transition-colors">Careers (We are hiring!)</Link></li>
+              <li><Link href="/guides" className="hover:text-cream transition-colors">Travel Guides &amp; Blog</Link></li>
             </ul>
           </div>
 
-          <div className="space-y-3">
-            <h4 className="text-sm font-bold text-white uppercase tracking-wider mb-4 font-poppins">Contact Us</h4>
-            <div className="flex items-center gap-2 text-xs">
-              <Phone className="w-4 h-4 text-[#00A676]" />
-              <span>+91 98765 43210</span>
-            </div>
-            <div className="flex items-center gap-2 text-xs">
-              <Mail className="w-4 h-4 text-[#00A676]" />
-              <span>info@voyageluxe.com</span>
+          <div className="space-y-4">
+            <h4 className="text-sm font-bold text-cream uppercase tracking-wider mb-4 font-display">Download the Tribe App</h4>
+            <div className="flex gap-2">
+              <div className="px-3 py-2 bg-cream/10 border border-cream/20 rounded-xl flex items-center gap-2 cursor-pointer hover:bg-cream/20 transition-all">
+                <Play className="w-4 h-4 text-primary fill-current" />
+                <div>
+                  <span className="text-[8px] block leading-none opacity-50">GET IT ON</span>
+                  <span className="text-[10px] font-bold block mt-0.5 leading-none">Google Play</span>
+                </div>
+              </div>
+              <div className="px-3 py-2 bg-cream/10 border border-cream/20 rounded-xl flex items-center gap-2 cursor-pointer hover:bg-cream/20 transition-all">
+                <Compass className="w-4 h-4 text-secondary fill-current" />
+                <div>
+                  <span className="text-[8px] block leading-none opacity-50">DOWNLOAD ON THE</span>
+                  <span className="text-[10px] font-bold block mt-0.5 leading-none">App Store</span>
+                </div>
+              </div>
             </div>
           </div>
+          
         </div>
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12 pt-6 border-t border-slate-900 flex flex-col md:flex-row justify-between items-center gap-4 text-xs">
-          <p>© 2026 Voyage Luxe Advisory. All rights reserved.</p>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 border-t border-cream/5 flex flex-col md:flex-row justify-between items-center gap-4 text-sand/40">
+          <p>© 2026 Wandertribe Adventure Platforms. All rights reserved.</p>
           <div className="flex gap-4">
-            <a href="#" className="hover:text-white transition-colors">Privacy Policy</a>
-            <a href="#" className="hover:text-white transition-colors">Terms of Service</a>
-            <Link href="/login" className="hover:text-[#00A676] font-semibold transition-colors">Partner Dashboard Login</Link>
+            <Link href="/privacy" className="hover:text-cream transition-colors">Privacy Policy</Link>
+            <Link href="/terms" className="hover:text-cream transition-colors">Terms of Service</Link>
           </div>
         </div>
       </footer>
-
-      {/* ─── INQUIRY MODAL FORM ─── */}
-      <AnimatePresence>
-        {inquiryModalOpen && (
-          <div className="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-            <motion.div 
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden relative border border-slate-100"
-            >
-              {/* Close Button */}
-              <button 
-                onClick={() => setInquiryModalOpen(false)}
-                className="absolute top-4 right-4 p-2 rounded-xl text-slate-400 hover:bg-slate-50 hover:text-slate-700 transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
-
-              {inquirySubmitted ? (
-                <div className="p-8 text-center space-y-4">
-                  <div className="w-16 h-16 rounded-full bg-[#00A676]/10 flex items-center justify-center mx-auto mb-4">
-                    <CheckCircle2 className="w-8 h-8 text-[#00A676]" />
-                  </div>
-                  <h3 className="text-xl font-bold font-poppins text-slate-900">Proposal Requested!</h3>
-                  <p className="text-slate-600 text-sm leading-relaxed max-w-sm mx-auto">
-                    Thank you! A Voyage Luxe advisor has received your request and will coordinate with our local travel partners to send you a customized proposal within 2 hours.
-                  </p>
-                </div>
-              ) : (
-                <div className="p-6 md:p-8 space-y-4">
-                  <div>
-                    <h3 className="text-xl font-bold font-poppins text-slate-950">Travel Consultation</h3>
-                    <p className="text-slate-500 text-xs mt-0.5">Let us build a customized travel plan for you.</p>
-                  </div>
-
-                  <form onSubmit={handleInquirySubmit} className="space-y-4">
-                    <div>
-                      <label className="block text-[11px] font-semibold text-slate-600 uppercase tracking-wider mb-1">Your Name</label>
-                      <input 
-                        type="text" 
-                        value={inquiryForm.name} 
-                        onChange={e => setInquiryForm({ ...inquiryForm, name: e.target.value })}
-                        placeholder="John Doe" 
-                        className="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sm text-slate-900 placeholder-slate-400 focus:bg-white focus:border-[#0F4C81] outline-none" 
-                        required 
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-[11px] font-semibold text-slate-600 uppercase tracking-wider mb-1">Email</label>
-                        <input 
-                          type="email" 
-                          value={inquiryForm.email} 
-                          onChange={e => setInquiryForm({ ...inquiryForm, email: e.target.value })}
-                          placeholder="you@email.com" 
-                          className="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sm text-slate-900 placeholder-slate-400 focus:bg-white focus:border-[#0F4C81] outline-none" 
-                          required 
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-[11px] font-semibold text-slate-600 uppercase tracking-wider mb-1">Phone</label>
-                        <input 
-                          type="tel" 
-                          value={inquiryForm.phone} 
-                          onChange={e => setInquiryForm({ ...inquiryForm, phone: e.target.value })}
-                          placeholder="+91 98765..." 
-                          className="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sm text-slate-900 placeholder-slate-400 focus:bg-white focus:border-[#0F4C81] outline-none" 
-                          required 
-                        />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-[11px] font-semibold text-slate-600 uppercase tracking-wider mb-1">Destination</label>
-                        <input 
-                          type="text" 
-                          value={inquiryForm.destination} 
-                          onChange={e => setInquiryForm({ ...inquiryForm, destination: e.target.value })}
-                          placeholder="e.g. Maldives" 
-                          className="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sm text-slate-900 placeholder-slate-400 focus:bg-white focus:border-[#0F4C81] outline-none" 
-                          required 
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-[11px] font-semibold text-slate-600 uppercase tracking-wider mb-1">Target Travel Date</label>
-                        <input 
-                          type="date" 
-                          value={inquiryForm.date} 
-                          onChange={e => setInquiryForm({ ...inquiryForm, date: e.target.value })}
-                          className="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sm text-slate-950 focus:bg-white focus:border-[#0F4C81] outline-none cursor-pointer" 
-                          required 
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-[11px] font-semibold text-slate-600 uppercase tracking-wider mb-1">Special Preferences / Custom Notes</label>
-                      <textarea 
-                        value={inquiryForm.notes} 
-                        onChange={e => setInquiryForm({ ...inquiryForm, notes: e.target.value })}
-                        placeholder="e.g. Vegetarian meals, honeymoon villa, private driver guide, standard flight ticket..." 
-                        rows={3} 
-                        className="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sm text-slate-900 placeholder-slate-400 focus:bg-white focus:border-[#0F4C81] outline-none resize-none"
-                      />
-                    </div>
-
-                    <button 
-                      type="submit"
-                      className="w-full bg-[#0F4C81] hover:bg-[#1a6ab5] text-white font-semibold text-sm py-3.5 rounded-xl transition-all duration-200 flex items-center justify-center gap-1.5 shadow-lg shadow-[#0F4C81]/15"
-                    >
-                      Submit Travel Inquiry <Plane className="w-4 h-4 -rotate-45" />
-                    </button>
-                  </form>
-                </div>
-              )}
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
 
     </div>
   );

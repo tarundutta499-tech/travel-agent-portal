@@ -1,42 +1,40 @@
 import type { Metadata } from "next";
-import { Inter, Poppins } from "next/font/google";
+import { Inter, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
-import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { Toaster } from "sonner";
 
 const inter = Inter({
-  subsets: ["latin"],
   variable: "--font-inter",
+  subsets: ["latin"],
   display: "swap",
 });
 
-const poppins = Poppins({
+const displayFont = Plus_Jakarta_Sans({
+  variable: "--font-display",
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
-  variable: "--font-poppins",
+  weight: ["500", "600", "700", "800"],
   display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: {
-    template: "%s | TravelOps Portal",
-    default: "TravelOps Portal — Package & Deal Management",
-  },
-  description: "Internal travel agent portal for managing packages, deals, and publishing to the live website.",
+  title: "Wandertribe — Adventure Travel Booking Platform",
+  description: "Vibrant, adventure-first travel experiences curated for the independent explorer.",
 };
 
 export default function RootLayout({
   children,
-}: {
+}: Readonly<{
   children: React.ReactNode;
-}) {
+}>) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className={`${inter.variable} ${poppins.variable} font-inter antialiased`}>
-        <ThemeProvider>
-          {children}
-          <Toaster richColors position="top-right" />
-        </ThemeProvider>
+    <html
+      lang="en"
+      className={`${inter.variable} ${displayFont.variable} h-full antialiased`}
+      suppressHydrationWarning
+    >
+      <body className="min-h-full flex flex-col bg-sand text-obsidian selection:bg-primary/20 selection:text-primary">
+        {children}
+        <Toaster richColors position="top-right" />
       </body>
     </html>
   );
