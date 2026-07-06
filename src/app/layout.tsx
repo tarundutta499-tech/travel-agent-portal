@@ -17,8 +17,30 @@ const displayFont = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Wandertribe — Adventure Travel Booking Platform",
-  description: "Vibrant, adventure-first travel experiences curated for the independent explorer.",
+  title: "Wandertribe — Kashmir Adventure Travel Booking Platform",
+  description: "Vibrant, adventure-first Kashmir travel experiences curated for the independent explorer.",
+  openGraph: {
+    title: "Wandertribe — Kashmir Adventure Travel Booking Platform",
+    description: "Vibrant, adventure-first Kashmir travel experiences curated for the independent explorer.",
+    url: "https://travel-agent-portal.vercel.app",
+    siteName: "Wandertribe",
+    images: [
+      {
+        url: "https://images.unsplash.com/photo-1544735716-392fe2489ffa?w=1200",
+        width: 1200,
+        height: 630,
+        alt: "Wandertribe Kashmir Adventures",
+      },
+    ],
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Wandertribe — Kashmir Adventure Travel Booking Platform",
+    description: "Vibrant, adventure-first Kashmir travel experiences curated for the independent explorer.",
+    images: ["https://images.unsplash.com/photo-1544735716-392fe2489ffa?w=1200"],
+  },
 };
 
 export default function RootLayout({
