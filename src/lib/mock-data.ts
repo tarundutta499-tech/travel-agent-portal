@@ -122,7 +122,7 @@ export const mockPackages: Package[] = [
     id: 'k4',
     title: 'Pahalgam Aru Valley Meadow Trail',
     slug: 'pahalgam-aru-valley-trail',
-    description: 'Ride and trek across the famous meadows of Betaab Valley and Aru Valley in Pahalgam. Wander alongside gushing streams, enjoy riverside picnics, and see local Nomadic shepherd (Bakarwal) camps.',
+    description: 'Ride and trek across the famous meadows of Betaab Valley and Aru Valley in Pahalgam, staying at the cozy Kashmir Holiday Inn. Wander alongside gushing streams, enjoy riverside picnics, and see local Nomadic shepherd (Bakarwal) camps.',
     destination: 'Pahalgam',
     price: 16000,
     duration: '4 Days',
@@ -137,10 +137,10 @@ export const mockPackages: Package[] = [
     rating: 4.9,
     reviewsCount: 58,
     itinerary: [
-      { day: 1, title: 'Arrive in Pahalgam Valley', description: 'Check-in at your riverside cottages. Explore local Lidder river markets in the afternoon.', activities: ['Cottage check-in', 'Lidder river walk', 'Local dinner'] },
+      { day: 1, title: 'Arrive in Pahalgam Valley', description: 'Check-in at the premium Kashmir Holiday Inn. Explore local Lidder river markets in the afternoon.', activities: ['Kashmir Holiday Inn check-in', 'Lidder river walk', 'Local dinner'] },
       { day: 2, title: 'Horseback Ride to Aru Meadows', description: 'Ride through pine forests up to Aru Valley. Enjoy a mountain picnic and meet nomadic shepherds.', activities: ['Meadow horse ride', 'Nomad camp visit', 'Riverside picnic'] }
     ],
-    included: ['Riverside cottage rooms', 'Horse ride fees', 'Breakfast & dinner', 'Lidder fishing permit', 'Local guide'],
+    included: ['Riverside cottage rooms at Kashmir Holiday Inn', 'Horse ride fees', 'Breakfast & dinner', 'Lidder fishing permit', 'Local guide'],
     excluded: ['Lunches', 'River rafting ticket', 'Shopping'],
     guide: {
       name: 'Farooq Shah',
