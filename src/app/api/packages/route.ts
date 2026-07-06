@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { mockPackages } from '@/lib/mock-data';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   try {
     const dbPackages = await prisma.package.findMany({
