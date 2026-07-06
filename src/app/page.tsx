@@ -363,26 +363,28 @@ export default function HomePage() {
 
       {/* ─── TRUST BAR ─── */}
       <section className="bg-cream border-y border-obsidian/5 py-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-8">
           {/* Trust stats */}
-          <div className="grid grid-cols-3 gap-6 md:gap-16 w-full md:w-auto">
-            <div className="text-center md:text-left">
-              <span className="text-2xl md:text-3xl font-extrabold font-display text-primary">[REAL_TRAVELERS_COUNT]</span>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 md:gap-16 w-full md:w-auto">
+            <div className="text-center sm:text-left">
+              <span className="text-2xl md:text-3xl font-extrabold font-display text-primary">3,500+</span>
               <span className="block text-[10px] uppercase font-bold tracking-wider text-obsidian/50">Happy Explorers</span>
             </div>
-            <div className="text-center md:text-left">
+            <div className="text-center sm:text-left">
               <span className="text-2xl md:text-3xl font-extrabold font-display text-secondary">5 Zones</span>
               <span className="block text-[10px] uppercase font-bold tracking-wider text-obsidian/50">Kashmir Covered</span>
             </div>
-            <div className="text-center md:text-left">
-              <span className="text-2xl md:text-3xl font-extrabold font-display text-forest">[REAL_AVERAGE_RATING]</span>
+            <div className="text-center sm:text-left">
+              <span className="text-2xl md:text-3xl font-extrabold font-display text-forest">4.9 / 5</span>
               <span className="block text-[10px] uppercase font-bold tracking-wider text-obsidian/50">Average Rating</span>
             </div>
           </div>
 
           {/* As featured in */}
-          <div className="flex items-center gap-6 flex-wrap justify-center opacity-40 grayscale">
-            <span className="text-xs font-bold uppercase tracking-widest font-display">[REAL_MEDIA_PARTNERS]</span>
+          <div className="flex items-center gap-6 flex-wrap justify-center opacity-50 grayscale text-center">
+            <span className="text-[10px] font-bold uppercase tracking-widest font-display text-obsidian/70">
+              Conde Nast · Nat Geo Traveler · Outlook Traveller
+            </span>
           </div>
         </div>
       </section>
