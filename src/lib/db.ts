@@ -2,31 +2,38 @@ import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { Pool } from 'pg';
 
-const connectionString = process.env.DATABASE_URL;
-
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };
 
-let prismaInstance: PrismaClient;
-
-if (connectionString) {
-  try {
-    const pool = new Pool({ connectionString });
-    const adapter = new PrismaPg(pool);
-    prismaInstance = new PrismaClient({
-      adapter,
-      log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
-    });
-  } catch (err) {
-    console.error('Failed to initialize database driver adapter:', err);
-    prismaInstance = new PrismaClient();
+// Lazy initialization helper
+function createPrismaClient(): PrismaClient {
+  const connectionString = process.env.DATABASE_URL;
+  
+  if (connectionString) {
+    try {
+      const pool = new Pool({ connectionString });
+      const adapter = new PrismaPg(pool);
+      return new PrismaClient({
+        adapter,
+        log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
+      });
+    } catch (err) {
+      console.error('Lazy Prisma Pg pool initialization failed:', err);
+      return new PrismaClient();
+    }
   }
-} else {
-  // Safe fallback client for build-time compilation when DATABASE_URL environment is not present
-  prismaInstance = new PrismaClient();
+
+  // Fallback default constructor for build-time compilation
+  return new PrismaClient();
 }
 
-export const prisma = globalForPrisma.prisma ?? prismaInstance;
-
-if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
+// Export a Lazy Proxy for PrismaClient
+export const prisma = new Proxy({} as PrismaClient, {
+  get(target, prop, receiver) {
+    if (!globalForPrisma.prisma) {
+      globalForPrisma.prisma = createPrismaClient();
+    }
+    return Reflect.get(globalForPrisma.prisma, prop, receiver);
+  }
+});
