@@ -115,7 +115,7 @@ export default function HomePage() {
     name: '',
     email: '',
     phone: '',
-    destination: '',
+    destination: 'Kashmir',
     date: '',
     guests: '2',
     notes: '',
@@ -158,7 +158,7 @@ export default function HomePage() {
           name: '',
           email: '',
           phone: '',
-          destination: '',
+          destination: 'Kashmir',
           date: '',
           guests: '2',
           notes: '',
@@ -555,7 +555,7 @@ export default function HomePage() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-[10px] font-bold text-obsidian/50 uppercase tracking-wider mb-1">Phone Number</label>
                     <input 
@@ -566,21 +566,6 @@ export default function HomePage() {
                       className="w-full px-3.5 py-2.5 bg-sand/30 border border-obsidian/10 text-xs text-obsidian rounded-xl outline-none focus:bg-white focus:border-primary"
                       required 
                     />
-                  </div>
-                  <div>
-                    <label className="block text-[10px] font-bold text-obsidian/50 uppercase tracking-wider mb-1">Destination Zone</label>
-                    <select 
-                      value={itineraryForm.destination}
-                      onChange={e => setItineraryForm({ ...itineraryForm, destination: e.target.value })}
-                      className="w-full px-3.5 py-2.5 bg-sand/30 border border-obsidian/10 text-xs text-obsidian rounded-xl outline-none focus:bg-white focus:border-primary cursor-pointer"
-                    >
-                      <option value="">Select location...</option>
-                      <option value="Gulmarg">Gulmarg</option>
-                      <option value="Srinagar">Srinagar</option>
-                      <option value="Sonamarg">Sonamarg</option>
-                      <option value="Pahalgam">Pahalgam</option>
-                      <option value="Gurez Valley">Gurez Valley</option>
-                    </select>
                   </div>
                   <div>
                     <label className="block text-[10px] font-bold text-obsidian/50 uppercase tracking-wider mb-1">Preferred Date</label>
