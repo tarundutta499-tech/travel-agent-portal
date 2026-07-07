@@ -1,68 +1,72 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { mockPackages } from '@/lib/mock-data';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    const dbPackages = await prisma.package.findMany({
+    const dbDestinations = await prisma.destination.findMany({
       where: { active: true },
       include: {
-        itinerary: true,
-        guide: true,
+        stops: {
+          include: {
+            hotels: true,
+          },
+          orderBy: { sequenceOrder: 'asc' },
+        },
+        itineraryTemplates: {
+          orderBy: { durationDays: 'asc' },
+        },
       },
-      orderBy: { createdAt: 'desc' },
     });
 
-    // If database has packages, return them; otherwise, fallback to mock data
-    if (dbPackages && dbPackages.length > 0) {
-      // Map database schema slightly if needed to match client expectations
-      const mapped = dbPackages.map(p => ({
-        id: p.id,
-        title: p.title,
-        slug: p.slug,
-        description: p.description,
-        destination: p.destination,
-        price: p.price,
-        duration: p.duration,
-        difficulty: p.difficulty as 'Easy' | 'Moderate' | 'Hard',
-        groupSizeMax: p.groupSizeMax,
-        image: p.image,
-        images: p.images,
-        category: p.category,
-        rating: p.rating,
-        reviewsCount: p.reviewsCount,
-        included: p.included,
-        excluded: p.excluded,
-        itinerary: p.itinerary.map(d => ({
-          day: d.day,
-          title: d.title,
-          description: d.description,
-          activities: d.activities,
+    // Map database models to client structure
+    const destinations = dbDestinations.map(d => ({
+      id: d.id,
+      name: d.name,
+      slug: d.slug,
+      description: d.description,
+      heroImage: d.heroImage,
+      stops: d.stops.map(s => ({
+        id: s.id,
+        locationName: s.locationName,
+        sequenceOrder: s.sequenceOrder,
+        defaultNights: s.defaultNights,
+        description: s.description,
+        hotels: s.hotels.map(h => ({
+          id: h.id,
+          name: h.name,
+          starRating: h.starRating,
+          isConfirmed: h.isConfirmed,
+          image: h.image,
+          notes: h.notes,
         })),
-        guide: p.guide ? {
-          name: p.guide.name,
-          avatar: p.guide.avatar,
-          rating: p.guide.rating,
-          experience: p.guide.experience,
-          bio: p.guide.bio,
-        } : {
-          name: 'Local Specialist Guide',
-          avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=local',
-          rating: 4.9,
-          experience: '5 Years',
-          bio: 'Certified local mountaineer with extensive rescue response training.',
+      })),
+      itineraryTemplates: d.itineraryTemplates.map(t => {
+        let itinerary = [];
+        try {
+          itinerary = JSON.parse(t.itineraryJson);
+        } catch (e) {
+          console.error('Failed to parse itineraryJson for template:', t.id, e);
         }
-      }));
-      return NextResponse.json({ success: true, packages: mapped });
-    }
+        return {
+          id: t.id,
+          durationDays: t.durationDays,
+          title: t.title,
+          price: t.price,
+          difficulty: t.difficulty,
+          image: t.image,
+          included: t.included,
+          excluded: t.excluded,
+          itinerary,
+        };
+      }),
+    }));
 
-    return NextResponse.json({ success: true, packages: mockPackages });
+    return NextResponse.json({ success: true, destinations });
 
   } catch (error: any) {
-    console.error('Error fetching public packages:', error);
-    // Graceful fallback to mock data to prevent server crashes
-    return NextResponse.json({ success: true, packages: mockPackages });
+    console.error('Error fetching public destinations & templates:', error);
+    return NextResponse.json({ success: false, error: 'Internal Server Error' }, { status: 500 });
   }
 }

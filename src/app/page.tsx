@@ -58,14 +58,33 @@ const categories = [
 ];
 
 export default function HomePage() {
-  const [packages, setPackages] = useState(mockPackages);
+  const [packages, setPackages] = useState<any[]>([]);
 
   useEffect(() => {
     fetch('/api/packages')
       .then(res => res.json())
       .then(data => {
-        if (data.success && data.packages) {
-          setPackages(data.packages);
+        if (data.success && data.destinations) {
+          const flattened: any[] = [];
+          data.destinations.forEach((dest: any) => {
+            dest.itineraryTemplates.forEach((tpl: any) => {
+              flattened.push({
+                id: tpl.id,
+                title: tpl.title,
+                slug: `${dest.slug}?duration=${tpl.durationDays}`,
+                destination: dest.name,
+                price: tpl.price,
+                duration: `${tpl.durationDays} Days`,
+                difficulty: tpl.difficulty,
+                image: tpl.image,
+                category: tpl.durationDays === 3 ? 'Cultural' : tpl.durationDays === 5 ? 'Trekking' : 'Road Trips',
+                rating: tpl.durationDays === 7 ? 4.98 : tpl.durationDays === 5 ? 4.92 : 4.88,
+                reviewsCount: tpl.durationDays === 7 ? 96 : tpl.durationDays === 5 ? 74 : 58,
+                included: tpl.included,
+              });
+            });
+          });
+          setPackages(flattened);
         }
       })
       .catch(err => console.error('Error fetching dynamic packages:', err));
@@ -437,7 +456,7 @@ export default function HomePage() {
                     <MapPin className="w-3 h-3 text-primary" /> {pkg.destination}, Kashmir
                   </p>
                   {(() => {
-                    const stay = pkg.included?.find(item => 
+                    const stay = pkg.included?.find((item: string) => 
                       item.toLowerCase().includes('inn') || 
                       item.toLowerCase().includes('lodging') || 
                       item.toLowerCase().includes('stay') || 

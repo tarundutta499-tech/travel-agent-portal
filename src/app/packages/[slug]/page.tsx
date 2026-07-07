@@ -6,11 +6,10 @@ import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { 
   Compass, MapPin, Calendar, Users, Heart, Star, 
-  ArrowLeft, Check, X, Shield, StarHalf, MessageSquare,
+  ArrowLeft, Check, X, Shield, MessageSquare,
   Clock, ShieldAlert, Award
 } from 'lucide-react';
 import Link from 'next/link';
-import { mockPackages } from '@/lib/mock-data';
 
 const formatCurrency = (val: number) => {
   return new Intl.NumberFormat('en-IN', {
@@ -23,31 +22,46 @@ const formatCurrency = (val: number) => {
 export default function PackageDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = use(params);
   
-  // Find package by slug
-  const [pkg, setPkg] = useState(() => mockPackages.find(p => p.slug === slug) || mockPackages[0]);
-  const [activeImage, setActiveImage] = useState<string>(pkg.image);
+  const [destination, setDestination] = useState<any>(null);
+  const [duration, setDuration] = useState<number>(5);
   const [activeDay, setActiveDay] = useState<number | null>(1);
   const [guestCount, setGuestCount] = useState<number>(2);
   const [date, setDate] = useState<string>('2026-10-15');
   const [bookingInquirySubmitted, setBookingInquirySubmitted] = useState<boolean>(false);
   const [saved, setSaved] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
+    // 1. Read duration parameter from URL query string on client side
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      const durParam = urlParams.get('duration');
+      if (durParam) {
+        setDuration(parseInt(durParam));
+      }
+    }
+
+    // 2. Fetch destination stops and templates
     fetch('/api/packages')
       .then(res => res.json())
       .then(data => {
-        if (data.success && data.packages) {
-          const found = data.packages.find((p: any) => p.slug === slug);
+        if (data.success && data.destinations) {
+          const found = data.destinations.find((d: any) => d.slug === slug);
           if (found) {
-            setPkg(found);
-            setActiveImage(found.image);
+            setDestination(found);
           }
         }
       })
-      .catch(err => console.error('Error loading database package detail:', err));
+      .catch(err => console.error('Error loading database destination detail:', err))
+      .finally(() => setLoading(false));
   }, [slug]);
 
-  const totalPrice = pkg.price * guestCount;
+  // Find active template based on duration state
+  const activeTemplate = destination?.itineraryTemplates?.find(
+    (t: any) => t.durationDays === duration
+  ) || destination?.itineraryTemplates?.[0];
+
+  const totalPrice = (activeTemplate?.price || 0) * guestCount;
 
   const handleBooking = (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,6 +70,32 @@ export default function PackageDetailPage({ params }: { params: Promise<{ slug: 
       setBookingInquirySubmitted(false);
     }, 4000);
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-sand text-obsidian flex items-center justify-center font-sans">
+        <div className="text-center space-y-3">
+          <Compass className="w-8 h-8 animate-spin text-primary mx-auto" />
+          <p className="text-xs font-semibold text-obsidian/60">Loading Kashmir Expedition details...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!destination) {
+    return (
+      <div className="min-h-screen bg-sand text-obsidian flex items-center justify-center font-sans">
+        <div className="text-center space-y-4 max-w-sm p-6 bg-cream border border-obsidian/10 rounded-3xl">
+          <ShieldAlert className="w-10 h-10 text-red-500 mx-auto" />
+          <h2 className="font-bold text-lg font-display">Destination Not Found</h2>
+          <p className="text-xs text-obsidian/60">We could not load information for this zone. Please return to packages list.</p>
+          <Link href="/packages">
+            <Button size="sm" className="mt-2">Back to Kashmir Trips</Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-sand text-obsidian flex flex-col font-sans antialiased">
@@ -78,43 +118,56 @@ export default function PackageDetailPage({ params }: { params: Promise<{ slug: 
       {/* GALLERY / LAYOUT */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 flex-1 space-y-8">
         
-        {/* Title and location */}
-        <div className="flex justify-between items-start gap-4 flex-wrap">
-          <div className="space-y-2">
+        {/* Title and duration picker */}
+        <div className="flex justify-between items-start gap-6 flex-wrap">
+          <div className="space-y-2 flex-1 min-w-[280px]">
             <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-primary">
-              <span>{pkg.category} Expedition</span>
+              <span>{activeTemplate?.difficulty} Expedition</span>
               <span>·</span>
-              <span className="flex items-center gap-0.5"><Star className="w-3.5 h-3.5 fill-amber-500 text-amber-500" /> {pkg.rating} ({pkg.reviewsCount} reviews)</span>
+              <span className="flex items-center gap-0.5"><Star className="w-3.5 h-3.5 fill-amber-500 text-amber-500" /> 4.9 (140+ reviews)</span>
             </div>
             <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight font-display text-obsidian leading-none">
-              {pkg.title}
+              {destination.name}: {activeTemplate?.title || 'Expedition'}
             </h1>
             <p className="text-sm text-obsidian/60 flex items-center gap-1.5 font-medium">
-              <MapPin className="w-4 h-4 text-primary" /> {pkg.destination}, Kashmir Valley
+              <MapPin className="w-4 h-4 text-primary" /> {destination.name} Valley, Kashmir
             </p>
           </div>
-          
-          <button 
-            onClick={() => setSaved(!saved)}
-            className="px-5 py-3 rounded-2xl bg-cream border border-obsidian/10 font-semibold text-xs transition-all hover:bg-obsidian/5 flex items-center gap-1.5"
-          >
-            <Heart className={`w-4 h-4 text-primary ${saved ? 'fill-current' : ''}`} /> {saved ? 'Saved' : 'Wishlist'}
-          </button>
+
+          <div className="bg-cream p-1.5 rounded-2xl border border-obsidian/10 flex items-center gap-1 shadow-sm">
+            {[3, 5, 7].map(d => (
+              <button
+                key={d}
+                onClick={() => {
+                  setDuration(d);
+                  setActiveDay(1);
+                }}
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                  duration === d 
+                    ? 'bg-obsidian text-cream shadow-sm' 
+                    : 'text-obsidian/60 hover:text-obsidian hover:bg-obsidian/5'
+                }`}
+              >
+                {d} Days
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Dynamic Image Gallery */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="md:col-span-3 aspect-[16/9] bg-obsidian/5 rounded-3xl overflow-hidden border border-obsidian/5">
-            <img src={activeImage} alt={pkg.title} className="w-full h-full object-cover" />
+            <img src={activeTemplate?.image || destination.heroImage} alt={destination.name} className="w-full h-full object-cover" />
           </div>
           <div className="grid grid-cols-3 md:grid-cols-1 gap-2">
-            {pkg.images.map((img, i) => (
+            {[
+              activeTemplate?.image || destination.heroImage,
+              'https://images.unsplash.com/photo-1544735716-392fe2489ffa?w=800',
+              'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800'
+            ].map((img, i) => (
               <div 
                 key={i} 
-                onClick={() => setActiveImage(img)}
-                className={`aspect-[4/3] bg-obsidian/5 rounded-2xl overflow-hidden cursor-pointer border-2 transition-all ${
-                  activeImage === img ? 'border-primary' : 'border-transparent opacity-70 hover:opacity-100'
-                }`}
+                className="aspect-[4/3] bg-obsidian/5 rounded-2xl overflow-hidden border border-transparent opacity-75 hover:opacity-100 transition-opacity"
               >
                 <img src={img} alt="" className="w-full h-full object-cover" />
               </div>
@@ -134,68 +187,104 @@ export default function PackageDetailPage({ params }: { params: Promise<{ slug: 
                 Trip Overview
               </h2>
               <p className="text-sm text-obsidian/75 leading-relaxed font-light">
-                {pkg.description}
+                {destination.description}
               </p>
               
               <div className="grid grid-cols-3 gap-4 pt-4 border-t border-obsidian/5 text-center">
                 <div>
                   <span className="text-[10px] uppercase font-bold text-obsidian/40 block">Duration</span>
-                  <span className="text-sm font-bold text-obsidian font-display">{pkg.duration}</span>
+                  <span className="text-sm font-bold text-obsidian font-display">{duration} Days</span>
                 </div>
                 <div>
-                  <span className="text-[10px] uppercase font-bold text-obsidian/40 block">Max Group Size</span>
-                  <span className="text-sm font-bold text-obsidian font-display">{pkg.groupSizeMax} Travelers</span>
+                  <span className="text-[10px] uppercase font-bold text-obsidian/40 block">Stops Included</span>
+                  <span className="text-sm font-bold text-obsidian font-display">
+                    {activeTemplate?.itinerary?.map((item: any) => item.stopName).filter((v: any, i: number, a: any) => a.indexOf(v) === i).join(' · ')}
+                  </span>
                 </div>
                 <div>
                   <span className="text-[10px] uppercase font-bold text-obsidian/40 block">Difficulty</span>
-                  <span className="text-sm font-bold text-obsidian font-display capitalize">{pkg.difficulty}</span>
+                  <span className="text-sm font-bold text-obsidian font-display capitalize">{activeTemplate?.difficulty}</span>
                 </div>
               </div>
             </div>
 
-            {/* Expandable Itinerary Accordion */}
+            {/* Adaptable Day-by-Day Itinerary */}
             <div className="bg-cream rounded-3xl p-6 md:p-8 border border-obsidian/5 shadow-sm space-y-6">
               <h2 className="text-xl font-bold font-display border-l-4 border-primary pl-3 text-obsidian">
-                Day-by-Day Expedition Itinerary
+                Day-by-Day Route Itinerary
               </h2>
 
-              <div className="space-y-3">
-                {pkg.itinerary.map(day => (
-                  <div 
-                    key={day.day}
-                    className="border border-obsidian/5 rounded-2xl overflow-hidden bg-sand/30"
-                  >
-                    <button 
-                      onClick={() => setActiveDay(activeDay === day.day ? null : day.day)}
-                      className="w-full flex items-center justify-between p-4 text-left font-bold text-sm text-obsidian font-display"
-                    >
-                      <span>Day {day.day}: {day.title}</span>
-                      <span className="text-primary font-bold text-lg">{activeDay === day.day ? '−' : '+'}</span>
-                    </button>
+              <div className="space-y-4">
+                {activeTemplate?.itinerary?.map((day: any) => {
+                  // Resolve hotel at the current stop
+                  const stop = destination.stops.find(
+                    (s: any) => s.locationName.toLowerCase() === day.stopName.toLowerCase()
+                  );
+                  const confirmedHotel = stop?.hotels?.find((h: any) => h.isConfirmed);
 
-                    <AnimatePresence>
-                      {activeDay === day.day && (
-                        <motion.div 
-                          initial={{ height: 0 }}
-                          animate={{ height: 'auto' }}
-                          exit={{ height: 0 }}
-                          className="overflow-hidden"
-                        >
-                          <div className="p-4 pt-0 border-t border-obsidian/5 text-xs text-obsidian/70 space-y-3 leading-relaxed">
-                            <p>{day.description}</p>
-                            <div className="flex flex-wrap gap-1.5">
-                              {day.activities.map(act => (
-                                <span key={act} className="px-2 py-0.5 rounded-full bg-cream border border-obsidian/5 text-obsidian/60 text-[10px] font-semibold">
-                                  {act}
-                                </span>
-                              ))}
+                  return (
+                    <div 
+                      key={day.day}
+                      className="border border-obsidian/5 rounded-2xl overflow-hidden bg-sand/30"
+                    >
+                      <button 
+                        onClick={() => setActiveDay(activeDay === day.day ? null : day.day)}
+                        className="w-full flex items-center justify-between p-4 text-left font-bold text-sm text-obsidian font-display"
+                      >
+                        <span className="flex items-center gap-2">
+                          <span className="px-2 py-0.5 rounded-lg bg-primary text-cream text-[10px] font-bold">Day {day.day}</span>
+                          <span>{day.title} ({day.stopName})</span>
+                        </span>
+                        <span className="text-primary font-bold text-lg">{activeDay === day.day ? '−' : '+'}</span>
+                      </button>
+
+                      <AnimatePresence>
+                        {activeDay === day.day && (
+                          <motion.div 
+                            initial={{ height: 0 }}
+                            animate={{ height: 'auto' }}
+                            exit={{ height: 0 }}
+                            className="overflow-hidden"
+                          >
+                            <div className="p-4 pt-0 border-t border-obsidian/5 text-xs text-obsidian/70 space-y-4 leading-relaxed">
+                              <p>{day.description}</p>
+                              
+                              {/* Hotel Placement Block */}
+                              <div className="p-3.5 rounded-2xl border transition-all">
+                                {confirmedHotel ? (
+                                  <div className="space-y-1">
+                                    <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-emerald-600">
+                                      <Check className="w-3.5 h-3.5" /> Confirmed Partner Hotel
+                                    </div>
+                                    <h4 className="font-bold text-sm text-obsidian font-display">{confirmedHotel.name}</h4>
+                                    {confirmedHotel.notes && (
+                                      <p className="text-[11px] text-obsidian/60 mt-0.5">{confirmedHotel.notes}</p>
+                                    )}
+                                  </div>
+                                ) : (
+                                  <div className="space-y-1">
+                                    <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-amber-600">
+                                      <Shield className="w-3.5 h-3.5" /> Partner hotel coming soon
+                                    </div>
+                                    <p className="text-[11px] text-obsidian/55 italic">Accommodation details for {day.stopName} are currently being finalized. Rest assured that all partners conform to our strict safety audits.</p>
+                                  </div>
+                                )}
+                              </div>
+
+                              <div className="flex flex-wrap gap-1.5">
+                                {day.activities?.map((act: string) => (
+                                  <span key={act} className="px-2 py-0.5 rounded-full bg-cream border border-obsidian/5 text-obsidian/60 text-[10px] font-semibold">
+                                    {act}
+                                  </span>
+                                ))}
+                              </div>
                             </div>
-                          </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
-                ))}
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  );
+                })}
               </div>
             </div>
 
@@ -206,7 +295,7 @@ export default function PackageDetailPage({ params }: { params: Promise<{ slug: 
                   <Check className="w-4 h-4" /> Inclusions
                 </h3>
                 <ul className="space-y-2">
-                  {pkg.included.map((item, i) => (
+                  {activeTemplate?.included?.map((item: string, i: number) => (
                     <li key={i} className="text-xs text-obsidian/70 flex items-start gap-2 leading-relaxed">
                       <Check className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0 mt-0.5" />
                       <span>{item}</span>
@@ -220,31 +309,13 @@ export default function PackageDetailPage({ params }: { params: Promise<{ slug: 
                   <X className="w-4 h-4" /> Exclusions
                 </h3>
                 <ul className="space-y-2">
-                  {pkg.excluded.map((item, i) => (
+                  {activeTemplate?.excluded?.map((item: string, i: number) => (
                     <li key={i} className="text-xs text-obsidian/70 flex items-start gap-2 leading-relaxed">
                       <X className="w-3.5 h-3.5 text-red-400 flex-shrink-0 mt-0.5" />
                       <span>{item}</span>
                     </li>
                   ))}
                 </ul>
-              </div>
-            </div>
-
-            {/* Local Host Profile Card */}
-            <div className="bg-cream rounded-3xl p-6 md:p-8 border border-obsidian/5 shadow-sm flex flex-col md:flex-row items-center gap-6">
-              <img 
-                src={pkg.guide.avatar} 
-                alt={pkg.guide.name} 
-                className="w-16 h-16 rounded-2xl border border-obsidian/10 bg-sand flex-shrink-0"
-              />
-              <div className="space-y-2 flex-1 text-center md:text-left">
-                <div className="flex items-center justify-center md:justify-start gap-2 text-xs font-bold uppercase tracking-widest text-secondary font-display">
-                  <span>Host &amp; Guide</span>
-                  <span>·</span>
-                  <span>{pkg.guide.experience} Experience</span>
-                </div>
-                <h3 className="font-bold text-lg text-obsidian font-display leading-none">{pkg.guide.name}</h3>
-                <p className="text-xs text-obsidian/60 leading-relaxed font-light">{pkg.guide.bio}</p>
               </div>
             </div>
 
@@ -257,14 +328,14 @@ export default function PackageDetailPage({ params }: { params: Promise<{ slug: 
               <div className="flex justify-between items-baseline">
                 <span className="text-[10px] uppercase font-bold text-obsidian/40 block">Trip Price</span>
                 <div>
-                  <span className="text-2xl font-extrabold text-secondary font-display">{formatCurrency(pkg.price)}</span>
+                  <span className="text-2xl font-extrabold text-secondary font-display">{formatCurrency(activeTemplate?.price || 0)}</span>
                   <span className="text-[10px] text-obsidian/50">/ person</span>
                 </div>
               </div>
 
               {bookingInquirySubmitted ? (
                 <div className="bg-[#00c98e]/10 border border-[#00c98e]/35 text-[#00c98e] text-xs p-4 rounded-2xl text-center font-medium leading-relaxed">
-                  🌟 Booking Inquiry Sent! Our local Kashmiri specialist guide has locked this date and is generating your booking credentials.
+                  🌟 Inquiry Sent! Our Kashmir tour specialist is finalizing your itinerary and will connect shortly.
                 </div>
               ) : (
                 <form onSubmit={handleBooking} className="space-y-4 pt-4 border-t border-obsidian/5">
@@ -315,7 +386,7 @@ export default function PackageDetailPage({ params }: { params: Promise<{ slug: 
               <Shield className="w-6 h-6 text-primary" />
               <h4 className="font-bold text-sm text-cream font-display">Tribe Protection</h4>
               <p className="text-[10px] text-sand/60 leading-relaxed font-light">
-                We guarantee local rescue dispatch, emergency satellite channels, and a 100% refund policy if mountain safety agencies warn against ridge activity.
+                We guarantee local rescue dispatch, emergency satellite channels, and a 100% refund policy if mountain safety agencies warn against activity.
               </p>
             </div>
 

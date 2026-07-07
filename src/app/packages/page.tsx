@@ -30,14 +30,33 @@ export default function PackagesListingPage() {
   const [mapView, setMapView] = useState<boolean>(false);
   const [savedPackages, setSavedPackages] = useState<string[]>([]);
   const [showMobileFilters, setShowMobileFilters] = useState<boolean>(false);
-  const [packages, setPackages] = useState(mockPackages);
+  const [packages, setPackages] = useState<any[]>([]);
 
   useEffect(() => {
     fetch('/api/packages')
       .then(res => res.json())
       .then(data => {
-        if (data.success && data.packages) {
-          setPackages(data.packages);
+        if (data.success && data.destinations) {
+          const flattened: any[] = [];
+          data.destinations.forEach((dest: any) => {
+            dest.itineraryTemplates.forEach((tpl: any) => {
+              flattened.push({
+                id: tpl.id,
+                title: tpl.title,
+                slug: `${dest.slug}?duration=${tpl.durationDays}`,
+                destination: dest.name,
+                price: tpl.price,
+                duration: `${tpl.durationDays} Days`,
+                difficulty: tpl.difficulty,
+                image: tpl.image,
+                category: tpl.durationDays === 3 ? 'Cultural' : tpl.durationDays === 5 ? 'Trekking' : 'Road Trips',
+                rating: tpl.durationDays === 7 ? 4.98 : tpl.durationDays === 5 ? 4.92 : 4.88,
+                reviewsCount: tpl.durationDays === 7 ? 96 : tpl.durationDays === 5 ? 74 : 58,
+                included: tpl.included,
+              });
+            });
+          });
+          setPackages(flattened);
         }
       })
       .catch(err => console.error('Error loading database packages:', err));
@@ -295,9 +314,10 @@ export default function PackagesListingPage() {
                         <p className="text-xs text-obsidian/60 flex items-center gap-1">
                           <MapPin className="w-3 h-3 text-primary" /> {pkg.destination}, Kashmir
                         </p>
+
                         {(() => {
-                          const stay = pkg.included?.find(item => 
-                            item.toLowerCase().includes('inn') || 
+                          const stay = pkg.included?.find((item: string) => 
+                            item.toLowerCase().includes('inn') ||
                             item.toLowerCase().includes('lodging') || 
                             item.toLowerCase().includes('stay') || 
                             item.toLowerCase().includes('camp') || 
