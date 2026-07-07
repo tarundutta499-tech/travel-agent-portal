@@ -28,6 +28,8 @@ export async function POST(request: Request) {
         sequenceOrder: 1,
         defaultNights: 2,
         description: 'Ancient capital of houseboats, Mughal pleasure gardens, and floating flower markets.',
+        touristPlaceName: 'Dal Lake & Mughal Heritage Gardens',
+        touristImage: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800',
       },
     });
 
@@ -38,6 +40,8 @@ export async function POST(request: Request) {
         sequenceOrder: 2,
         defaultNights: 1,
         description: 'High altitude mountain bowl valley famous for backcountry skiing Gondolas.',
+        touristPlaceName: 'Mt. Apharwat Peak Gondola',
+        touristImage: 'https://images.unsplash.com/photo-1544735716-392fe2489ffa?w=800',
       },
     });
 
@@ -48,6 +52,8 @@ export async function POST(request: Request) {
         sequenceOrder: 3,
         defaultNights: 1,
         description: 'Lidder river valley with nomadic shepherd meadow routes.',
+        touristPlaceName: 'Betaab Valley & Aru Meadows',
+        touristImage: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800',
       },
     });
 
@@ -58,6 +64,8 @@ export async function POST(request: Request) {
         sequenceOrder: 4,
         defaultNights: 1,
         description: 'The Golden Meadow at the base of pristine glaciers and frozen passes.',
+        touristPlaceName: 'Thajiwas Glacier Trekking Route',
+        touristImage: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=800',
       },
     });
 

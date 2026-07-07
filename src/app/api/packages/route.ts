@@ -33,6 +33,8 @@ export async function GET() {
         sequenceOrder: s.sequenceOrder,
         defaultNights: s.defaultNights,
         description: s.description,
+        touristImage: s.touristImage,
+        touristPlaceName: s.touristPlaceName,
         hotels: s.hotels.map(h => ({
           id: h.id,
           name: h.name,

@@ -30,16 +30,18 @@ model Destination {
 }
 
 model Stop {
-  id            String      @id @default(uuid())
-  destinationId String
-  destination   Destination @relation(fields: [destinationId], references: [id], onDelete: Cascade)
-  locationName  String
-  sequenceOrder Int
-  defaultNights Int
-  description   String
-  hotels        Hotel[]
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
+  id               String      @id @default(uuid())
+  destinationId    String
+  destination      Destination @relation(fields: [destinationId], references: [id], onDelete: Cascade)
+  locationName     String
+  sequenceOrder    Int
+  defaultNights    Int
+  description      String
+  touristImage     String?
+  touristPlaceName String?
+  hotels           Hotel[]
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
 }
 
 model Hotel {

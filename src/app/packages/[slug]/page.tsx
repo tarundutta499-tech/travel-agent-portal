@@ -249,27 +249,31 @@ export default function PackageDetailPage({ params }: { params: Promise<{ slug: 
                             <div className="p-4 pt-0 border-t border-obsidian/5 text-xs text-obsidian/70 space-y-4 leading-relaxed">
                               <p>{day.description}</p>
                               
-                              {/* Hotel Placement Block */}
-                              <div className="p-3.5 rounded-2xl border transition-all">
-                                {confirmedHotel ? (
-                                  <div className="space-y-1">
-                                    <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-emerald-600">
-                                      <Check className="w-3.5 h-3.5" /> Confirmed Partner Hotel
-                                    </div>
-                                    <h4 className="font-bold text-sm text-obsidian font-display">{confirmedHotel.name}</h4>
-                                    {confirmedHotel.notes && (
-                                      <p className="text-[11px] text-obsidian/60 mt-0.5">{confirmedHotel.notes}</p>
-                                    )}
+                              {/* Hotel Placement or Tourist Spot Block */}
+                              {confirmedHotel ? (
+                                <div className="p-4 rounded-2xl border border-emerald-500/10 bg-emerald-500/5 transition-all">
+                                  <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-emerald-600">
+                                    <Check className="w-3.5 h-3.5" /> Confirmed Partner Hotel
                                   </div>
-                                ) : (
-                                  <div className="space-y-1">
-                                    <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-amber-600">
-                                      <Shield className="w-3.5 h-3.5" /> Partner hotel coming soon
-                                    </div>
-                                    <p className="text-[11px] text-obsidian/55 italic">Accommodation details for {day.stopName} are currently being finalized. Rest assured that all partners conform to our strict safety audits.</p>
+                                  <h4 className="font-bold text-sm text-obsidian font-display mt-0.5">{confirmedHotel.name}</h4>
+                                  {confirmedHotel.notes && (
+                                    <p className="text-[11px] text-obsidian/60 mt-1">{confirmedHotel.notes}</p>
+                                  )}
+                                </div>
+                              ) : stop?.touristImage ? (
+                                <div className="rounded-2xl border border-obsidian/10 overflow-hidden bg-sand/10 shadow-sm flex flex-col md:flex-row gap-4 p-3.5">
+                                  <div className="w-full md:w-32 aspect-[4/3] md:aspect-square rounded-xl overflow-hidden flex-shrink-0 bg-obsidian/5">
+                                    <img src={stop.touristImage} alt={stop.touristPlaceName} className="w-full h-full object-cover" />
                                   </div>
-                                )}
-                              </div>
+                                  <div className="space-y-1 flex-1 flex flex-col justify-center">
+                                    <div className="inline-flex items-center gap-1 text-[9px] font-extrabold uppercase tracking-wider text-primary">
+                                      <span>📍 Destination Highlight</span>
+                                    </div>
+                                    <h4 className="font-bold text-sm text-obsidian font-display">{stop.touristPlaceName}</h4>
+                                    <p className="text-[11px] text-obsidian/60 leading-relaxed mt-0.5">{stop.description}</p>
+                                  </div>
+                                </div>
+                              ) : null}
 
                               <div className="flex flex-wrap gap-1.5">
                                 {day.activities?.map((act: string) => (
